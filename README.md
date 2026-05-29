@@ -43,10 +43,8 @@ uXRCE-DDS
 ROS2 Humble
     │
     ▼
-AgentX
-    │
-    ▼
-DTSpaceTime
+SentinelX
+    
 ```
 
 ## 권장 설치 순서
@@ -56,8 +54,7 @@ DTSpaceTime
 3. px4_msgs 빌드
 4. Micro XRCE DDS Agent 실행
 5. PX4 SIH 실행
-6. ROS2 Offboard 예제 실행
-7. AgentX 연동
+6. ROS2 Offboard SentinelX 실행
 
 ## 검증 완료 환경
 
