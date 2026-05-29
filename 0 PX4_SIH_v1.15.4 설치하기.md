@@ -51,13 +51,9 @@ PX4 v1.15.4는 다음 특성을 가진다.
 
 ```bash
 cd ~
-
 git clone https://github.com/PX4/PX4-Autopilot.git
-
 cd PX4-Autopilot
-
 git checkout v1.15.4
-
 git submodule update --init --recursive
 ```
 
@@ -95,7 +91,6 @@ source ~/.bashrc
 
 ```bash
 cd ~/PX4-Autopilot
-
 make px4_sitl
 ```
 
@@ -132,11 +127,7 @@ src/modules/simulation/simulator_sih
 
 ```bash
 cd ~/PX4-Autopilot/build/px4_sitl_default
-
-PX4_SIM_MODEL=sihsim_quadx \
-./bin/px4 \
--s etc/init.d-posix/rcS \
-etc
+PX4_SIM_MODEL=sihsim_quadx /bin/px4 -s etc/init.d-posix/rcS etc
 ```
 
 ---
@@ -224,9 +215,7 @@ param show SIH_LOC_H0
 param set SIH_LOC_LAT0 0
 param set SIH_LOC_LON0 0
 param set SIH_LOC_H0 0
-
 param save
-
 reboot
 ```
 
@@ -236,9 +225,7 @@ reboot
 
 ```bash
 param set MAV_SYS_ID 10
-
 param save
-
 reboot
 ```
 
@@ -248,9 +235,5 @@ reboot
 
 ```bash
 cd ~/PX4-Autopilot/build/px4_sitl_default
-
-PX4_SIM_MODEL=sihsim_quadx \
-./bin/px4 \
--s etc/init.d-posix/rcS \
-etc
+PX4_SIM_MODEL=sihsim_quadx ./bin/px4 -s etc/init.d-posix/rcS etc
 ```
