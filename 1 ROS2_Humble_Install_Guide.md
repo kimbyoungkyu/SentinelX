@@ -210,10 +210,6 @@ PX4 SIH
 uXRCE-DDS
     |
 ROS2
-    |
-AgentX
-    |
-DTSpaceTime
 ```
 
 ---
