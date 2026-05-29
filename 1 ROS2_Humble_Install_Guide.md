@@ -9,7 +9,6 @@
 - Ubuntu 22.04
 - PX4 v1.15.4
 - SIH (Simulation In Hardware)
-- AgentX
 - DDS 기반 시스템
 
 ---
@@ -144,9 +143,7 @@ rosdep update
 
 ```bash
 mkdir -p ~/px4_ros2_ws/src
-
 cd ~/px4_ros2_ws
-
 colcon build
 ```
 
@@ -154,7 +151,6 @@ colcon build
 
 ```bash
 echo "source ~/px4_ros2_ws/install/setup.bash" >> ~/.bashrc
-
 source ~/.bashrc
 ```
 
@@ -188,7 +184,6 @@ sudo apt install ros-humble-mavros* -y
 
 ```bash
 cd ~/px4_ros2_ws/src
-
 git clone https://github.com/PX4/px4_msgs.git
 ```
 
@@ -196,7 +191,6 @@ git clone https://github.com/PX4/px4_msgs.git
 
 ```bash
 cd ~/px4_ros2_ws
-
 colcon build
 ```
 
