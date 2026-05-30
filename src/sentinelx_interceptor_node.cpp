@@ -8,7 +8,8 @@ using namespace std::chrono_literals;
 namespace sentinelx_interceptor
 {
 
-SentinelXInterceptorNode::SentinelXInterceptorNode(): Node("sentinelx_interceptor_node"),
+SentinelXInterceptorNode::SentinelXInterceptorNode()
+: Node("sentinelx_interceptor_node"),
   interceptor_id_(declare_parameter<std::string>("interceptor_id", "SX-INT-001")),
   mission_id_(""),
   target_id_(""),
@@ -22,28 +23,44 @@ SentinelXInterceptorNode::SentinelXInterceptorNode(): Node("sentinelx_intercepto
   seeker_detected_(false),
   seeker_locked_(false)
 {
-  c2_command_sub_ = create_subscription<sentinelx::msg::C2Command>("/sentinelx/c2/command", 10,std::bind(&SentinelXInterceptorNode::on_c2_command, this, std::placeholders::_1));
-  c2_track_sub_ = create_subscription<sentinelx::msg::TargetTrack>("/sentinelx/c2/target_track", 10,std::bind(&SentinelXInterceptorNode::on_c2_target_track, this, std::placeholders::_1));
-  px4_state_sub_ = create_subscription<sentinelx::msg::PX4VehicleState>("/sentinelx/px4/state", 10,std::bind(&SentinelXInterceptorNode::on_px4_state, this, std::placeholders::_1));
-  seeker_status_sub_ = create_subscription<sentinelx::msg::SeekerStatus>("/sentinelx/seeker/status", 10,std::bind(&SentinelXInterceptorNode::on_seeker_status, this, std::placeholders::_1));
-  seeker_track_sub_ = create_subscription<sentinelx::msg::SeekerTrack>("/sentinelx/seeker/track", 10,std::bind(&SentinelXInterceptorNode::on_seeker_track, this, std::placeholders::_1));
+  c2_command_sub_ = create_subscription<cuas_msgs::msg::C2Command>(
+    "/sentinelx/c2/command", 10,
+    std::bind(&SentinelXInterceptorNode::on_c2_command, this, std::placeholders::_1));
+
+  c2_track_sub_ = create_subscription<cuas_msgs::msg::TargetTrack>(
+    "/sentinelx/c2/target_track", 10,
+    std::bind(&SentinelXInterceptorNode::on_c2_target_track, this, std::placeholders::_1));
+
+  px4_state_sub_ = create_subscription<sentinelx::msg::PX4VehicleState>(
+    "/sentinelx/px4/state", 10,
+    std::bind(&SentinelXInterceptorNode::on_px4_state, this, std::placeholders::_1));
+
+  seeker_status_sub_ = create_subscription<sentinelx::msg::SeekerStatus>(
+    "/sentinelx/seeker/status", 10,
+    std::bind(&SentinelXInterceptorNode::on_seeker_status, this, std::placeholders::_1));
+
+  seeker_track_sub_ = create_subscription<sentinelx::msg::SeekerTrack>(
+    "/sentinelx/seeker/track", 10,
+    std::bind(&SentinelXInterceptorNode::on_seeker_track, this, std::placeholders::_1));
+
   guidance_pub_ = create_publisher<sentinelx::msg::GuidanceCommand>("/sentinelx/guidance/command", 10);
   phase_pub_ = create_publisher<sentinelx::msg::InterceptorPhase>("/sentinelx/interceptor/phase", 10);
   target_estimate_pub_ = create_publisher<sentinelx::msg::InternalTargetEstimate>("/sentinelx/interceptor/target_estimate", 10);
-  mission_ack_pub_ = create_publisher<sentinelx::msg::MissionAck>("/sentinelx/interceptor/mission_ack", 10);
-  status_pub_ = create_publisher<sentinelx::msg::InterceptorStatus>("/sentinelx/interceptor/status", 10);
-  progress_pub_ = create_publisher<sentinelx::msg::InterceptProgress>("/sentinelx/interceptor/progress", 10);
-  heartbeat_pub_ = create_publisher<sentinelx::msg::InterceptorHeartbeat>("/sentinelx/interceptor/heartbeat", 10);
-  result_pub_ = create_publisher<sentinelx::msg::EngagementResult>("/sentinelx/interceptor/engagement_result", 10);
-  fault_pub_ = create_publisher<sentinelx::msg::FaultReport>("/sentinelx/interceptor/fault_report", 10);
+  mission_ack_pub_ = create_publisher<cuas_msgs::msg::MissionAck>("/sentinelx/interceptor/mission_ack", 10);
+  status_pub_ = create_publisher<cuas_msgs::msg::InterceptorStatus>("/sentinelx/interceptor/status", 10);
+  progress_pub_ = create_publisher<cuas_msgs::msg::InterceptProgress>("/sentinelx/interceptor/progress", 10);
+  heartbeat_pub_ = create_publisher<cuas_msgs::msg::InterceptorHeartbeat>("/sentinelx/interceptor/heartbeat", 10);
+  result_pub_ = create_publisher<cuas_msgs::msg::EngagementResult>("/sentinelx/interceptor/engagement_result", 10);
+  fault_pub_ = create_publisher<cuas_msgs::msg::FaultReport>("/sentinelx/interceptor/fault_report", 10);
+
   control_timer_ = create_wall_timer(50ms, std::bind(&SentinelXInterceptorNode::control_loop, this));
   RCLCPP_INFO(get_logger(), "SentinelX interceptor node started in simulation-safe mode");
 }
 
-void SentinelXInterceptorNode::on_c2_command(const sentinelx::msg::C2Command::SharedPtr msg)
+void SentinelXInterceptorNode::on_c2_command(const cuas_msgs::msg::C2Command::SharedPtr msg)
 {
   if (launched_ && !c2_command_allowed_after_launch(msg->command_type)) {
-    send_ack(*msg, false, sentinelx::msg::MissionAck::REJECTED, "C2 command ignored after launch; target updates remain accepted");
+    send_ack(*msg, false, cuas_msgs::msg::MissionAck::REJECTED, "C2 command ignored after launch; target updates remain accepted");
     return;
   }
 
@@ -51,39 +68,39 @@ void SentinelXInterceptorNode::on_c2_command(const sentinelx::msg::C2Command::Sh
   target_id_ = msg->target_id;
 
   switch (msg->command_type) {
-    case sentinelx::msg::C2Command::ASSIGN_TARGET:
+    case cuas_msgs::msg::C2Command::ASSIGN_TARGET:
       phase_ = Phase::MissionLoaded;
-      send_ack(*msg, true, sentinelx::msg::MissionAck::OK, "mission loaded");
+      send_ack(*msg, true, cuas_msgs::msg::MissionAck::OK, "mission loaded");
       break;
-    case sentinelx::msg::C2Command::PREPARE_INTERCEPT:
+    case cuas_msgs::msg::C2Command::PREPARE_INTERCEPT:
       phase_ = Phase::ReadyToLaunch;
-      send_ack(*msg, true, sentinelx::msg::MissionAck::OK, "ready to launch");
+      send_ack(*msg, true, cuas_msgs::msg::MissionAck::OK, "ready to launch");
       break;
-    case sentinelx::msg::C2Command::AUTHORIZE_LAUNCH:
+    case cuas_msgs::msg::C2Command::AUTHORIZE_LAUNCH:
       launched_ = true;
       phase_ = Phase::InertialMidcourse;
-      send_ack(*msg, true, sentinelx::msg::MissionAck::OK, "launch accepted in simulation state machine");
+      send_ack(*msg, true, cuas_msgs::msg::MissionAck::OK, "launch accepted in simulation state machine");
       break;
-    case sentinelx::msg::C2Command::ABORT:
+    case cuas_msgs::msg::C2Command::ABORT:
       phase_ = Phase::ReturnHome;
-      send_ack(*msg, true, sentinelx::msg::MissionAck::OK, "safe return requested");
+      send_ack(*msg, true, cuas_msgs::msg::MissionAck::OK, "safe return requested");
       break;
-    case sentinelx::msg::C2Command::RETURN_HOME:
+    case cuas_msgs::msg::C2Command::RETURN_HOME:
       phase_ = Phase::ReturnHome;
-      send_ack(*msg, true, sentinelx::msg::MissionAck::OK, "return home requested");
+      send_ack(*msg, true, cuas_msgs::msg::MissionAck::OK, "return home requested");
       break;
-    case sentinelx::msg::C2Command::LAND:
+    case cuas_msgs::msg::C2Command::LAND:
       phase_ = Phase::Idle;
       launched_ = false;
-      send_ack(*msg, true, sentinelx::msg::MissionAck::OK, "land/idle requested");
+      send_ack(*msg, true, cuas_msgs::msg::MissionAck::OK, "land/idle requested");
       break;
     default:
-      send_ack(*msg, false, sentinelx::msg::MissionAck::REJECTED, "unsupported command for this simulation kit");
+      send_ack(*msg, false, cuas_msgs::msg::MissionAck::REJECTED, "unsupported command for this simulation kit");
       break;
   }
 }
 
-void SentinelXInterceptorNode::on_c2_target_track(const sentinelx::msg::TargetTrack::SharedPtr msg)
+void SentinelXInterceptorNode::on_c2_target_track(const cuas_msgs::msg::TargetTrack::SharedPtr msg)
 {
   if (!target_id_.empty() && msg->target_id != target_id_) {
     return;
@@ -167,7 +184,7 @@ void SentinelXInterceptorNode::publish_guidance()
 
 void SentinelXInterceptorNode::publish_status()
 {
-  sentinelx::msg::InterceptorStatus msg;
+  cuas_msgs::msg::InterceptorStatus msg;
   msg.stamp = now();
   msg.interceptor_id = interceptor_id_;
   msg.mission_id = mission_id_;
@@ -189,7 +206,7 @@ void SentinelXInterceptorNode::publish_status()
 
 void SentinelXInterceptorNode::publish_progress()
 {
-  sentinelx::msg::InterceptProgress msg;
+  cuas_msgs::msg::InterceptProgress msg;
   msg.stamp = now();
   msg.mission_id = mission_id_;
   msg.interceptor_id = interceptor_id_;
@@ -201,12 +218,12 @@ void SentinelXInterceptorNode::publish_progress()
 
 void SentinelXInterceptorNode::publish_heartbeat()
 {
-  sentinelx::msg::InterceptorHeartbeat msg;
+  cuas_msgs::msg::InterceptorHeartbeat msg;
   msg.stamp = now();
   msg.interceptor_id = interceptor_id_;
   msg.mavlink_sys_id = mavlink_sys_id_;
-  msg.status = launched_ ? sentinelx::msg::InterceptorHeartbeat::STATUS_TRACKING : sentinelx::msg::InterceptorHeartbeat::STATUS_READY;
-  msg.mode = sentinelx::msg::InterceptorHeartbeat::MODE_OFFBOARD;
+  msg.status = launched_ ? cuas_msgs::msg::InterceptorHeartbeat::STATUS_TRACKING : cuas_msgs::msg::InterceptorHeartbeat::STATUS_READY;
+  msg.mode = cuas_msgs::msg::InterceptorHeartbeat::MODE_OFFBOARD;
   msg.armed = has_px4_state_ ? latest_px4_state_.armed : false;
   msg.connected = has_px4_state_ ? latest_px4_state_.connected : false;
   msg.offboard_available = true;
@@ -246,9 +263,9 @@ void SentinelXInterceptorNode::publish_target_estimate()
   target_estimate_pub_->publish(msg);
 }
 
-void SentinelXInterceptorNode::send_ack(const sentinelx::msg::C2Command & cmd, bool accepted, uint8_t code, const std::string & message)
+void SentinelXInterceptorNode::send_ack(const cuas_msgs::msg::C2Command & cmd, bool accepted, uint8_t code, const std::string & message)
 {
-  sentinelx::msg::MissionAck ack;
+  cuas_msgs::msg::MissionAck ack;
   ack.stamp = now();
   ack.command_id = cmd.command_id;
   ack.mission_id = cmd.mission_id;
@@ -261,35 +278,35 @@ void SentinelXInterceptorNode::send_ack(const sentinelx::msg::C2Command & cmd, b
 
 bool SentinelXInterceptorNode::c2_command_allowed_after_launch(uint8_t command_type) const
 {
-  return command_type == sentinelx::msg::C2Command::ABORT ||
-         command_type == sentinelx::msg::C2Command::RETURN_HOME ||
-         command_type == sentinelx::msg::C2Command::LAND;
+  return command_type == cuas_msgs::msg::C2Command::ABORT ||
+         command_type == cuas_msgs::msg::C2Command::RETURN_HOME ||
+         command_type == cuas_msgs::msg::C2Command::LAND;
 }
 
 uint8_t SentinelXInterceptorNode::to_cuas_state() const
 {
   switch (phase_) {
-    case Phase::Idle: return sentinelx::msg::InterceptorStatus::IDLE;
-    case Phase::MissionLoaded: return sentinelx::msg::InterceptorStatus::READY;
-    case Phase::ReadyToLaunch: return sentinelx::msg::InterceptorStatus::ARMED;
-    case Phase::ReturnHome: return sentinelx::msg::InterceptorStatus::RETURNING;
-    case Phase::Fault: return sentinelx::msg::InterceptorStatus::FAULT;
-    default: return sentinelx::msg::InterceptorStatus::ACTIVE;
+    case Phase::Idle: return cuas_msgs::msg::InterceptorStatus::IDLE;
+    case Phase::MissionLoaded: return cuas_msgs::msg::InterceptorStatus::READY;
+    case Phase::ReadyToLaunch: return cuas_msgs::msg::InterceptorStatus::ARMED;
+    case Phase::ReturnHome: return cuas_msgs::msg::InterceptorStatus::RETURNING;
+    case Phase::Fault: return cuas_msgs::msg::InterceptorStatus::FAULT;
+    default: return cuas_msgs::msg::InterceptorStatus::ACTIVE;
   }
 }
 
 uint8_t SentinelXInterceptorNode::to_cuas_progress_phase() const
 {
   switch (phase_) {
-    case Phase::MissionLoaded: return sentinelx::msg::InterceptProgress::ASSIGNED;
-    case Phase::ReadyToLaunch: return sentinelx::msg::InterceptProgress::PREPARING;
-    case Phase::Launched: return sentinelx::msg::InterceptProgress::LAUNCHED;
-    case Phase::InertialMidcourse: return sentinelx::msg::InterceptProgress::MIDCOURSE;
-    case Phase::SeekerSearch: return sentinelx::msg::InterceptProgress::COOPERATIVE_TRACKING;
-    case Phase::TerminalHoming: return sentinelx::msg::InterceptProgress::TERMINAL_APPROACH_SIM;
-    case Phase::InterceptSuccess: return sentinelx::msg::InterceptProgress::COMPLETED;
-    case Phase::InterceptFailed: return sentinelx::msg::InterceptProgress::FAILED;
-    default: return sentinelx::msg::InterceptProgress::NONE;
+    case Phase::MissionLoaded: return cuas_msgs::msg::InterceptProgress::ASSIGNED;
+    case Phase::ReadyToLaunch: return cuas_msgs::msg::InterceptProgress::PREPARING;
+    case Phase::Launched: return cuas_msgs::msg::InterceptProgress::LAUNCHED;
+    case Phase::InertialMidcourse: return cuas_msgs::msg::InterceptProgress::MIDCOURSE;
+    case Phase::SeekerSearch: return cuas_msgs::msg::InterceptProgress::COOPERATIVE_TRACKING;
+    case Phase::TerminalHoming: return cuas_msgs::msg::InterceptProgress::TERMINAL_APPROACH_SIM;
+    case Phase::InterceptSuccess: return cuas_msgs::msg::InterceptProgress::COMPLETED;
+    case Phase::InterceptFailed: return cuas_msgs::msg::InterceptProgress::FAILED;
+    default: return cuas_msgs::msg::InterceptProgress::NONE;
   }
 }
 
