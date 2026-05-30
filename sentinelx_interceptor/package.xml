@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>sentinelx_interceptor</name>
+  <version>0.1.0</version>
+  <description>SentinelX high-level interceptor state machine node for simulation and integration testing.</description>
+  <maintainer email="dev@example.com">SentinelX</maintainer>
+  <license>Proprietary</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>rclcpp</depend>
+  <depend>cuas_msgs</depend>
+  <depend>sentinelx_msgs</depend>
+</package>
