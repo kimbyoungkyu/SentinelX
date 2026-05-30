@@ -8,8 +8,7 @@ using namespace std::chrono_literals;
 namespace sentinelx_interceptor
 {
 
-SentinelXInterceptorNode::SentinelXInterceptorNode()
-: Node("sentinelx_interceptor_node"),
+SentinelXInterceptorNode::SentinelXInterceptorNode(): Node("sentinelx_interceptor_node"),
   interceptor_id_(declare_parameter<std::string>("interceptor_id", "SX-INT-001")),
   mission_id_(""),
   target_id_(""),
@@ -23,26 +22,11 @@ SentinelXInterceptorNode::SentinelXInterceptorNode()
   seeker_detected_(false),
   seeker_locked_(false)
 {
-  c2_command_sub_ = create_subscription<sentinelx::msg::C2Command>(
-    "/sentinelx/c2/command", 10,
-    std::bind(&SentinelXInterceptorNode::on_c2_command, this, std::placeholders::_1));
-
-  c2_track_sub_ = create_subscription<sentinelx::msg::TargetTrack>(
-    "/sentinelx/c2/target_track", 10,
-    std::bind(&SentinelXInterceptorNode::on_c2_target_track, this, std::placeholders::_1));
-
-  px4_state_sub_ = create_subscription<sentinelx::msg::PX4VehicleState>(
-    "/sentinelx/px4/state", 10,
-    std::bind(&SentinelXInterceptorNode::on_px4_state, this, std::placeholders::_1));
-
-  seeker_status_sub_ = create_subscription<sentinelx::msg::SeekerStatus>(
-    "/sentinelx/seeker/status", 10,
-    std::bind(&SentinelXInterceptorNode::on_seeker_status, this, std::placeholders::_1));
-
-  seeker_track_sub_ = create_subscription<sentinelx::msg::SeekerTrack>(
-    "/sentinelx/seeker/track", 10,
-    std::bind(&SentinelXInterceptorNode::on_seeker_track, this, std::placeholders::_1));
-
+  c2_command_sub_ = create_subscription<sentinelx::msg::C2Command>("/sentinelx/c2/command", 10,std::bind(&SentinelXInterceptorNode::on_c2_command, this, std::placeholders::_1));
+  c2_track_sub_ = create_subscription<sentinelx::msg::TargetTrack>("/sentinelx/c2/target_track", 10,std::bind(&SentinelXInterceptorNode::on_c2_target_track, this, std::placeholders::_1));
+  px4_state_sub_ = create_subscription<sentinelx::msg::PX4VehicleState>("/sentinelx/px4/state", 10,std::bind(&SentinelXInterceptorNode::on_px4_state, this, std::placeholders::_1));
+  seeker_status_sub_ = create_subscription<sentinelx::msg::SeekerStatus>("/sentinelx/seeker/status", 10,std::bind(&SentinelXInterceptorNode::on_seeker_status, this, std::placeholders::_1));
+  seeker_track_sub_ = create_subscription<sentinelx::msg::SeekerTrack>("/sentinelx/seeker/track", 10,std::bind(&SentinelXInterceptorNode::on_seeker_track, this, std::placeholders::_1));
   guidance_pub_ = create_publisher<sentinelx::msg::GuidanceCommand>("/sentinelx/guidance/command", 10);
   phase_pub_ = create_publisher<sentinelx::msg::InterceptorPhase>("/sentinelx/interceptor/phase", 10);
   target_estimate_pub_ = create_publisher<sentinelx::msg::InternalTargetEstimate>("/sentinelx/interceptor/target_estimate", 10);
@@ -52,7 +36,6 @@ SentinelXInterceptorNode::SentinelXInterceptorNode()
   heartbeat_pub_ = create_publisher<sentinelx::msg::InterceptorHeartbeat>("/sentinelx/interceptor/heartbeat", 10);
   result_pub_ = create_publisher<sentinelx::msg::EngagementResult>("/sentinelx/interceptor/engagement_result", 10);
   fault_pub_ = create_publisher<sentinelx::msg::FaultReport>("/sentinelx/interceptor/fault_report", 10);
-
   control_timer_ = create_wall_timer(50ms, std::bind(&SentinelXInterceptorNode::control_loop, this));
   RCLCPP_INFO(get_logger(), "SentinelX interceptor node started in simulation-safe mode");
 }
