@@ -61,6 +61,8 @@ private:
   void on_c2_targetTrackCallback(const cuas_msgs::msg::TargetTrack::SharedPtr msg);
 
   void control_loop();
+  void heartbeat_loop();
+
   void publish_guidance();
   void publish_status();
   void publish_progress();
@@ -94,6 +96,7 @@ private:
   rclcpp::Subscription<sentinelx::msg::PX4VehicleState>::SharedPtr px4_state_sub_;
   rclcpp::Subscription<sentinelx::msg::SeekerStatus>::SharedPtr seeker_status_sub_;
   rclcpp::Subscription<sentinelx::msg::SeekerTrack>::SharedPtr seeker_track_sub_;
+
   rclcpp::Publisher<sentinelx::msg::GuidanceCommand>::SharedPtr guidance_pub_;
   rclcpp::Publisher<sentinelx::msg::InterceptorPhase>::SharedPtr phase_pub_;
   rclcpp::Publisher<sentinelx::msg::InternalTargetEstimate>::SharedPtr target_estimate_pub_;
@@ -101,7 +104,7 @@ private:
   rclcpp::Subscription<cuas_msgs::msg::C2Command>::SharedPtr c2_command_sub_;
   rclcpp::Subscription<cuas_msgs::msg::InterceptMission>::SharedPtr intercept_mission_sub_;
   rclcpp::Subscription<cuas_msgs::msg::TargetTrack>::SharedPtr target_track_sub_;
-
+  
   rclcpp::Publisher<cuas_msgs::msg::MissionAck>::SharedPtr mission_ack_pub_;
   rclcpp::Publisher<cuas_msgs::msg::InterceptorStatus>::SharedPtr status_pub_;
   rclcpp::Publisher<cuas_msgs::msg::InterceptProgress>::SharedPtr progress_pub_;
@@ -110,5 +113,6 @@ private:
   rclcpp::Publisher<cuas_msgs::msg::FaultReport>::SharedPtr fault_pub_;
 
   rclcpp::TimerBase::SharedPtr control_timer_;
+  rclcpp::TimerBase::SharedPtr heartbeat_timer_;
 };
 

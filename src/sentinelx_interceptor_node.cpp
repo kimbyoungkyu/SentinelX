@@ -24,20 +24,19 @@ SentinelXInterceptorNode::SentinelXInterceptorNode() : Node("sentinelx_intercept
   rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;  
 	auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 5),qos_profile);
 
-  c2_command_sub_ = this->create_subscription<cuas_msgs::msg::C2Command>("/cuas/c2/command",qos,std::bind(&SentinelXInterceptorNode::on_c2_command,this,std::placeholders::_1));
-  intercept_mission_sub_ = this->create_subscription<cuas_msgs::msg::InterceptMission>("/cuas/c2/mission",qos,std::bind(&SentinelXInterceptorNode::on_c2_missionCallback,this,std::placeholders::_1));
-  target_track_sub_ =	this->create_subscription<cuas_msgs::msg::TargetTrack>("/cuas/c2/target_track",qos,std::bind(	&SentinelXInterceptorNode::on_c2_targetTrackCallback,this,std::placeholders::_1));
-/*
-  c2_command_sub_ = create_subscription<cuas_msgs::msg::C2Command>(
-    "/cuas/c2/command", 
-    10,
-    std::bind(&SentinelXInterceptorNode::on_c2_command, this, std::placeholders::_1));
+  c2_command_sub_ = this->create_subscription<cuas_msgs::msg::C2Command>(
+    "/cuas/c2/command",
+    qos,
+    std::bind(&SentinelXInterceptorNode::on_c2_command,this,std::placeholders::_1));
 
-  c2_track_sub_ = create_subscription<cuas_msgs::msg::TargetTrack>(
-    "/cuas/c2/target_track", 
-    10,
-    std::bind(&SentinelXInterceptorNode::on_c2_target_track, this, std::placeholders::_1));
-    */
+  intercept_mission_sub_ = this->create_subscription<cuas_msgs::msg::InterceptMission>(
+    "/cuas/c2/mission",
+    qos,
+    std::bind(&SentinelXInterceptorNode::on_c2_missionCallback,this,std::placeholders::_1));
+
+  target_track_sub_ =	this->create_subscription<cuas_msgs::msg::TargetTrack>("/cuas/c2/target_track",
+    qos,
+    std::bind(&SentinelXInterceptorNode::on_c2_targetTrackCallback,this,std::placeholders::_1));
 
   px4_state_sub_ = create_subscription<sentinelx::msg::PX4VehicleState>(
     "/sentinelx/px4/state", 
@@ -56,16 +55,25 @@ SentinelXInterceptorNode::SentinelXInterceptorNode() : Node("sentinelx_intercept
 
   guidance_pub_ = create_publisher<sentinelx::msg::GuidanceCommand>("/sentinelx/guidance/command", 10);
   phase_pub_ = create_publisher<sentinelx::msg::InterceptorPhase>("/sentinelx/interceptor/phase", 10);
+
+
+
   target_estimate_pub_ = create_publisher<sentinelx::msg::InternalTargetEstimate>("/sentinelx/interceptor/target_estimate", 10);
-  mission_ack_pub_ = create_publisher<cuas_msgs::msg::MissionAck>("/sentinelx/interceptor/mission_ack", 10);
-  status_pub_ = create_publisher<cuas_msgs::msg::InterceptorStatus>("/sentinelx/interceptor/status", 10);
-  progress_pub_ = create_publisher<cuas_msgs::msg::InterceptProgress>("/sentinelx/interceptor/progress", 10);
-  heartbeat_pub_ = create_publisher<cuas_msgs::msg::InterceptorHeartbeat>("/sentinelx/interceptor/heartbeat", 10);
-  result_pub_ = create_publisher<cuas_msgs::msg::EngagementResult>("/sentinelx/interceptor/engagement_result", 10);
-  fault_pub_ = create_publisher<cuas_msgs::msg::FaultReport>("/sentinelx/interceptor/fault_report", 10);
+
+
+
+  mission_ack_pub_ = create_publisher<cuas_msgs::msg::MissionAck>("/cuas/interceptor/ack", 10);
+  status_pub_ = create_publisher<cuas_msgs::msg::InterceptorStatus>("/cuas/interceptor/status", 10);
+  progress_pub_ = create_publisher<cuas_msgs::msg::InterceptProgress>("/cuas/interceptor/progress", 10);
+  result_pub_ = create_publisher<cuas_msgs::msg::EngagementResult>("/cuas/interceptor/result", 10);
+  fault_pub_ = create_publisher<cuas_msgs::msg::FaultReport>("/cuas/interceptor/fault", 10);
+  heartbeat_pub_ = create_publisher<cuas_msgs::msg::InterceptorHeartbeat>("/cuas/interceptor/heartbeat", 10);
+
 
   control_timer_ = create_wall_timer(50ms, std::bind(&SentinelXInterceptorNode::control_loop, this));
+  heartbeat_timer_ = create_wall_timer(100ms, std::bind(&SentinelXInterceptorNode::publish_heartbeat, this));
   RCLCPP_INFO(get_logger(), "SentinelX interceptor node started in simulation-safe mode");
+  
 }
 
 
@@ -151,20 +159,26 @@ void SentinelXInterceptorNode::on_seeker_track(const sentinelx::msg::SeekerTrack
   }
 }
 
+void SentinelXInterceptorNode::heartbeat_loop(){
+  //RCLCPP_INFO(get_logger(), "heartbeat_loop");
+  publish_heartbeat();
+
+}
+
 void SentinelXInterceptorNode::control_loop()
 {
+  //RCLCPP_INFO(get_logger(), "control_loop");
   if (launched_ && seeker_locked_) {
     phase_ = Phase::TerminalHoming;
   } else if (launched_ && seeker_detected_ && phase_ == Phase::InertialMidcourse) {
     phase_ = Phase::SeekerSearch;
   }
-
-  publish_guidance();
-  publish_status();
-  publish_progress();
-  publish_heartbeat();
-  publish_phase();
-  publish_target_estimate();
+  //publish_guidance();
+  //publish_status();
+  //publish_progress();
+  //publish_heartbeat();
+  //publish_phase();
+  //publish_target_estimate();
 }
 
 void SentinelXInterceptorNode::publish_guidance()

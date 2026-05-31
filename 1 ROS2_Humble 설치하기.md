@@ -10,7 +10,7 @@
 - PX4 v1.15.4
 - SIH (Simulation In Hardware)
 - DDS 기반 시스템
-
+cd ..
 ---
 
 # 시스템 업데이트

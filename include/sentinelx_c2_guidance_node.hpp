@@ -29,5 +29,9 @@ private:
   rclcpp::Publisher<sentinelx::msg::SeekerTrack>::SharedPtr track_pub_;
   rclcpp::Publisher<sentinelx::msg::InterceptorHealth>::SharedPtr health_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
+
+  rclcpp::TimerBase::SharedPtr tHeartbeat_;
+
+  
 };
 
