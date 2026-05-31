@@ -91,16 +91,16 @@ private:
   sentinelx::msg::PX4VehicleState latest_px4_state_;
   sentinelx::msg::SeekerTrack latest_seeker_track_;
 
-  rclcpp::Subscription<cuas_msgs::msg::C2Command>::SharedPtr c2_command_sub_;
-  rclcpp::Subscription<cuas_msgs::msg::InterceptMission>::SharedPtr intercept_mission_sub_;
-  rclcpp::Subscription<cuas_msgs::msg::TargetTrack>::SharedPtr target_track_sub_;
-
   rclcpp::Subscription<sentinelx::msg::PX4VehicleState>::SharedPtr px4_state_sub_;
   rclcpp::Subscription<sentinelx::msg::SeekerStatus>::SharedPtr seeker_status_sub_;
   rclcpp::Subscription<sentinelx::msg::SeekerTrack>::SharedPtr seeker_track_sub_;
   rclcpp::Publisher<sentinelx::msg::GuidanceCommand>::SharedPtr guidance_pub_;
   rclcpp::Publisher<sentinelx::msg::InterceptorPhase>::SharedPtr phase_pub_;
   rclcpp::Publisher<sentinelx::msg::InternalTargetEstimate>::SharedPtr target_estimate_pub_;
+
+  rclcpp::Subscription<cuas_msgs::msg::C2Command>::SharedPtr c2_command_sub_;
+  rclcpp::Subscription<cuas_msgs::msg::InterceptMission>::SharedPtr intercept_mission_sub_;
+  rclcpp::Subscription<cuas_msgs::msg::TargetTrack>::SharedPtr target_track_sub_;
 
   rclcpp::Publisher<cuas_msgs::msg::MissionAck>::SharedPtr mission_ack_pub_;
   rclcpp::Publisher<cuas_msgs::msg::InterceptorStatus>::SharedPtr status_pub_;
