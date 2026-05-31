@@ -1,11 +1,6 @@
-#include "sentinelx_px4_control/sentinelx_px4_control_node.hpp"
-
+#include "sentinelx_px4_control_node.hpp"
 #include <chrono>
-
 using namespace std::chrono_literals;
-
-namespace sentinelx_px4_control
-{
 
 SentinelXPX4ControlNode::SentinelXPX4ControlNode()
 : Node("sentinelx_px4_control_node"),
@@ -130,4 +125,10 @@ void SentinelXPX4ControlNode::publish_health(const std::string & message, bool h
   health_pub_->publish(msg);
 }
 
-}  // namespace sentinelx_px4_control
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<SentinelXPX4ControlNode>());
+  rclcpp::shutdown();
+  return 0;
+}

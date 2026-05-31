@@ -8,9 +8,6 @@
 #include "sentinelx/msg/interceptor_phase.hpp"
 #include "sentinelx/msg/interceptor_health.hpp"
 
-namespace sentinelx_seeker
-{
-
 class SentinelXSeekerNode : public rclcpp::Node
 {
 public:
@@ -34,4 +31,3 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
 };
 
-}  // namespace sentinelx_seeker

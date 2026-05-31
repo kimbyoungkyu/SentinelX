@@ -1,15 +1,10 @@
-#include "sentinelx_interceptor/sentinelx_interceptor_node.hpp"
-
+#include "sentinelx_interceptor_node.hpp"
 #include <cmath>
 #include <chrono>
 
 using namespace std::chrono_literals;
 
-namespace sentinelx_interceptor
-{
-
-SentinelXInterceptorNode::SentinelXInterceptorNode()
-: Node("sentinelx_interceptor_node"),
+SentinelXInterceptorNode::SentinelXInterceptorNode() : Node("sentinelx_interceptor_node"),
   interceptor_id_(declare_parameter<std::string>("interceptor_id", "SX-INT-001")),
   mission_id_(""),
   target_id_(""),
@@ -23,24 +18,42 @@ SentinelXInterceptorNode::SentinelXInterceptorNode()
   seeker_detected_(false),
   seeker_locked_(false)
 {
+  RCLCPP_INFO(this->get_logger(),"Interceptor ID: %s",interceptor_id_.c_str());
+  RCLCPP_INFO(this->get_logger(),"mavlink_sys_id: %d",mavlink_sys_id_);
+  
+  rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;  
+	auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 5),qos_profile);
+
+  c2_command_sub_ = this->create_subscription<cuas_msgs::msg::C2Command>("/cuas/c2/command",qos,std::bind(&SentinelXInterceptorNode::on_c2_command,this,std::placeholders::_1));
+  intercept_mission_sub_ = this->create_subscription<cuas_msgs::msg::InterceptMission>("/cuas/c2/mission",qos,std::bind(&SentinelXInterceptorNode::on_c2_missionCallback,this,std::placeholders::_1));
+  target_track_sub_ =	this->create_subscription<cuas_msgs::msg::TargetTrack>("/cuas/c2/target_track",qos,std::bind(	&SentinelXInterceptorNode::on_c2_targetTrackCallback,this,std::placeholders::_1));
+
+
+/*
   c2_command_sub_ = create_subscription<cuas_msgs::msg::C2Command>(
-    "/sentinelx/c2/command", 10,
+    "/cuas/c2/command", 
+    10,
     std::bind(&SentinelXInterceptorNode::on_c2_command, this, std::placeholders::_1));
 
   c2_track_sub_ = create_subscription<cuas_msgs::msg::TargetTrack>(
-    "/sentinelx/c2/target_track", 10,
+    "/cuas/c2/target_track", 
+    10,
     std::bind(&SentinelXInterceptorNode::on_c2_target_track, this, std::placeholders::_1));
+    */
 
   px4_state_sub_ = create_subscription<sentinelx::msg::PX4VehicleState>(
-    "/sentinelx/px4/state", 10,
+    "/sentinelx/px4/state", 
+    10,
     std::bind(&SentinelXInterceptorNode::on_px4_state, this, std::placeholders::_1));
 
   seeker_status_sub_ = create_subscription<sentinelx::msg::SeekerStatus>(
-    "/sentinelx/seeker/status", 10,
+    "/sentinelx/seeker/status", 
+    10,
     std::bind(&SentinelXInterceptorNode::on_seeker_status, this, std::placeholders::_1));
 
   seeker_track_sub_ = create_subscription<sentinelx::msg::SeekerTrack>(
-    "/sentinelx/seeker/track", 10,
+    "/sentinelx/seeker/track", 
+    10,
     std::bind(&SentinelXInterceptorNode::on_seeker_track, this, std::placeholders::_1));
 
   guidance_pub_ = create_publisher<sentinelx::msg::GuidanceCommand>("/sentinelx/guidance/command", 10);
@@ -57,13 +70,14 @@ SentinelXInterceptorNode::SentinelXInterceptorNode()
   RCLCPP_INFO(get_logger(), "SentinelX interceptor node started in simulation-safe mode");
 }
 
-void SentinelXInterceptorNode::on_c2_command(const cuas_msgs::msg::C2Command::SharedPtr msg)
-{
+
+
+
+void SentinelXInterceptorNode::on_c2_command(const cuas_msgs::msg::C2Command::SharedPtr msg){
   if (launched_ && !c2_command_allowed_after_launch(msg->command_type)) {
     send_ack(*msg, false, cuas_msgs::msg::MissionAck::REJECTED, "C2 command ignored after launch; target updates remain accepted");
     return;
   }
-
   mission_id_ = msg->mission_id;
   target_id_ = msg->target_id;
 
@@ -100,8 +114,10 @@ void SentinelXInterceptorNode::on_c2_command(const cuas_msgs::msg::C2Command::Sh
   }
 }
 
-void SentinelXInterceptorNode::on_c2_target_track(const cuas_msgs::msg::TargetTrack::SharedPtr msg)
-{
+void SentinelXInterceptorNode::on_c2_missionCallback(const cuas_msgs::msg::InterceptMission::SharedPtr msg){
+}
+
+void SentinelXInterceptorNode::on_c2_targetTrackCallback(const cuas_msgs::msg::TargetTrack::SharedPtr msg){
   if (!target_id_.empty() && msg->target_id != target_id_) {
     return;
   }
@@ -310,4 +326,10 @@ uint8_t SentinelXInterceptorNode::to_cuas_progress_phase() const
   }
 }
 
-}  // namespace sentinelx_interceptor
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<SentinelXInterceptorNode>());
+  rclcpp::shutdown();
+  return 0;
+}

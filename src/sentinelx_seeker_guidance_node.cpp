@@ -1,14 +1,10 @@
-#include "sentinelx_seeker/sentinelx_seeker_node.hpp"
+#include "sentinelx_seeker_guidance_node.hpp"
 
 #include <chrono>
 
 using namespace std::chrono_literals;
 
-namespace sentinelx_seeker
-{
-
-SentinelXSeekerNode::SentinelXSeekerNode()
-: Node("sentinelx_seeker_node"),
+SentinelXSeekerNode::SentinelXSeekerNode(): Node("sentinelx_seeker_guidance_node"),
   interceptor_id_(declare_parameter<std::string>("interceptor_id", "SX-INT-001")),
   target_id_(declare_parameter<std::string>("target_id", "")),
   simulate_detection_(declare_parameter<bool>("simulate_detection", false)),
@@ -24,7 +20,7 @@ SentinelXSeekerNode::SentinelXSeekerNode()
   track_pub_ = create_publisher<sentinelx::msg::SeekerTrack>("/sentinelx/seeker/track", 10);
   health_pub_ = create_publisher<sentinelx::msg::InterceptorHealth>("/sentinelx/health", 10);
   timer_ = create_wall_timer(100ms, std::bind(&SentinelXSeekerNode::publish_seeker, this));
-  RCLCPP_INFO(get_logger(), "SentinelX seeker simulation stub started");
+  RCLCPP_INFO(get_logger(), "SentinelX Seeker guidance node started");
 }
 
 void SentinelXSeekerNode::on_phase(const sentinelx::msg::InterceptorPhase::SharedPtr msg)
@@ -75,4 +71,10 @@ void SentinelXSeekerNode::publish_seeker()
   track_pub_->publish(track);
 }
 
-}  // namespace sentinelx_seeker
+int main(int argc, char ** argv)
+{
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<SentinelXSeekerNode>());
+  rclcpp::shutdown();
+  return 0;
+}

@@ -12,8 +12,6 @@
 #include "sentinelx/msg/px4_vehicle_state.hpp"
 #include "sentinelx/msg/interceptor_health.hpp"
 
-namespace sentinelx_px4_control
-{
 
 class SentinelXPX4ControlNode : public rclcpp::Node
 {
@@ -54,4 +52,4 @@ private:
   rclcpp::TimerBase::SharedPtr state_timer_;
 };
 
-}  // namespace sentinelx_px4_control
+
