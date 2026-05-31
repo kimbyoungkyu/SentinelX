@@ -27,8 +27,6 @@ SentinelXInterceptorNode::SentinelXInterceptorNode() : Node("sentinelx_intercept
   c2_command_sub_ = this->create_subscription<cuas_msgs::msg::C2Command>("/cuas/c2/command",qos,std::bind(&SentinelXInterceptorNode::on_c2_command,this,std::placeholders::_1));
   intercept_mission_sub_ = this->create_subscription<cuas_msgs::msg::InterceptMission>("/cuas/c2/mission",qos,std::bind(&SentinelXInterceptorNode::on_c2_missionCallback,this,std::placeholders::_1));
   target_track_sub_ =	this->create_subscription<cuas_msgs::msg::TargetTrack>("/cuas/c2/target_track",qos,std::bind(	&SentinelXInterceptorNode::on_c2_targetTrackCallback,this,std::placeholders::_1));
-
-
 /*
   c2_command_sub_ = create_subscription<cuas_msgs::msg::C2Command>(
     "/cuas/c2/command", 

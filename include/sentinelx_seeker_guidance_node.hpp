@@ -2,7 +2,6 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <string>
-
 #include "sentinelx/msg/seeker_status.hpp"
 #include "sentinelx/msg/seeker_track.hpp"
 #include "sentinelx/msg/interceptor_phase.hpp"
