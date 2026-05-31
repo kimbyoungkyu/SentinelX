@@ -4,31 +4,71 @@
 
 using namespace std::chrono_literals;
 
-SentinelXSeekerNode::SentinelXSeekerNode(): Node("sentinelx_seeker_guidance_node"),
-  interceptor_id_(declare_parameter<std::string>("interceptor_id", "SX-INT-001")),
+SentinelXSeekerNode::SentinelXSeekerNode()
+: Node("sentinelx_seeker_guidance_node"),
+  interceptor_id_(declare_parameter<std::string>("interceptor_id", "INT001")),
   target_id_(declare_parameter<std::string>("target_id", "")),
   simulate_detection_(declare_parameter<bool>("simulate_detection", false)),
   simulate_lock_(declare_parameter<bool>("simulate_lock", false)),
   frame_id_(0U),
   current_phase_(sentinelx::msg::InterceptorPhase::PHASE_IDLE)
 {
+  // 1. Phase Subscriber
   phase_sub_ = create_subscription<sentinelx::msg::InterceptorPhase>(
     "/sentinelx/interceptor/phase", 10,
     std::bind(&SentinelXSeekerNode::on_phase, this, std::placeholders::_1));
 
+
+  std::string topic_name = "/INT" + interceptor_id_ + "/camera/image_raw";
+  auto qos_profile = rclcpp::QoS(rclcpp::KeepLast(10)).reliability(rclcpp::ReliabilityPolicy::BestEffort);
+  image_sub_ = this->create_subscription<sensor_msgs::msg::Image>(  // :: 로 수정
+    topic_name,                  // _ 추가
+    qos_profile,
+    std::bind(&SentinelXSeekerNode::image_callback, this, std::placeholders::_1));    
+
+
+  // 2. Camera Image Subscriber (Humble 표준 QoS 적용 및 오타 수정)
+  /*
+  
+  image_sub_ = this->create_subscription<sensor_msgs::msg::Image>(  // :: 로 수정
+    "/" + interceptor_id_ + "/camera/image_raw",                  // _ 추가
+    qos_profile,
+    std::bind(&SentinelXSeekerNode::image_callback, this, std::placeholders::_1));    
+    */
+
+  // 3. Publishers
   status_pub_ = create_publisher<sentinelx::msg::SeekerStatus>("/sentinelx/seeker/status", 10);
-  track_pub_ = create_publisher<sentinelx::msg::SeekerTrack>("/sentinelx/seeker/track", 10);
+  track_pub_  = create_publisher<sentinelx::msg::SeekerTrack>("/sentinelx/seeker/track", 10);
   health_pub_ = create_publisher<sentinelx::msg::InterceptorHealth>("/sentinelx/health", 10);
+
+  // 4. Timer (chrono_literals 네임스페이스 활성화 상태 기준, 안 된다면 std::chrono::milliseconds(100) 사용)
+  using namespace std::chrono_literals; 
   timer_ = create_wall_timer(100ms, std::bind(&SentinelXSeekerNode::publish_seeker, this));
+
   RCLCPP_INFO(get_logger(), "SentinelX Seeker guidance node started");
 }
-
 void SentinelXSeekerNode::on_phase(const sentinelx::msg::InterceptorPhase::SharedPtr msg)
 {
   current_phase_ = msg->phase;
   if (!msg->target_id.empty()) {
     target_id_ = msg->target_id;
   }
+}
+
+
+void SentinelXSeekerNode::image_callback(const sensor_msgs::msg::Image::ConstSharedPtr msg) const
+{
+    // 이미지 메타데이터 출력 예시
+    RCLCPP_INFO(this->get_logger(), 
+        "Received Image -> Header Timestamp: [%d.%d], Resolution: %dx%d, Encoding: %s",
+        msg->header.stamp.sec,
+        msg->header.stamp.nanosec,
+        msg->width,
+        msg->height,
+        msg->encoding.c_str()
+    );
+    // 실제 픽셀 데이터의 크기 확인 (msg->data는 std::vector<uint8_t> 형태입니다)
+    // RCLCPP_INFO(this->get_logger(), "Image Data Size: %zu bytes", msg->data.size());
 }
 
 void SentinelXSeekerNode::publish_seeker()

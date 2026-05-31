@@ -12,11 +12,13 @@ SentinelXPX4ControlNode::SentinelXPX4ControlNode()
   has_global_position_(false),
   has_battery_(false)
 {
+  //c2_guidance_node또는 seeker_guidance_node로부터 px4 보드에게 제어 신호를 받는 msg
   guidance_sub_ = create_subscription<sentinelx::msg::GuidanceCommand>(
     "/sentinelx/guidance/command", 10,
     std::bind(&SentinelXPX4ControlNode::on_guidance_command, this, std::placeholders::_1));
 
-  vehicle_status_sub_ = create_subscription<px4_msgs::msg::VehicleStatus>(
+   //px4 sih로부터 받는 상태 msg
+   vehicle_status_sub_ = create_subscription<px4_msgs::msg::VehicleStatus>(
     "/fmu/out/vehicle_status", 10,
     std::bind(&SentinelXPX4ControlNode::on_vehicle_status, this, std::placeholders::_1));
 
@@ -32,6 +34,7 @@ SentinelXPX4ControlNode::SentinelXPX4ControlNode()
     "/fmu/out/battery_status", 10,
     std::bind(&SentinelXPX4ControlNode::on_battery_status, this, std::placeholders::_1));
 
+  //상태 전송
   state_pub_ = create_publisher<sentinelx::msg::PX4VehicleState>("/sentinelx/px4/state", 10);
   health_pub_ = create_publisher<sentinelx::msg::InterceptorHealth>("/sentinelx/health", 10);
   state_timer_ = create_wall_timer(50ms, std::bind(&SentinelXPX4ControlNode::publish_state, this));

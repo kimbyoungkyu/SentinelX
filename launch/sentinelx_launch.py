@@ -2,7 +2,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    interceptor_id = "SX-INT-001"
+    interceptor_id = "1"
     return LaunchDescription([
         Node(
             package="sentinelx",

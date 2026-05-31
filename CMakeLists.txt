@@ -7,6 +7,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED) 
 find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(rosidl_default_runtime REQUIRED)
@@ -51,7 +52,7 @@ ament_target_dependencies(sentinelx_c2_guidance_node rclcpp)
 target_link_libraries(sentinelx_c2_guidance_node "${cpp_typesupport_target}")
 
 add_executable(sentinelx_seeker_guidance_node src/sentinelx_seeker_guidance_node.cpp)
-ament_target_dependencies(sentinelx_seeker_guidance_node rclcpp)
+ament_target_dependencies(sentinelx_seeker_guidance_node rclcpp sensor_msgs)
 target_link_libraries(sentinelx_seeker_guidance_node "${cpp_typesupport_target}")
 
 install(TARGETS
