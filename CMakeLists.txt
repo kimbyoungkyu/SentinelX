@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(rosidl_default_runtime REQUIRED)
 find_package(cuas_msgs REQUIRED)
 find_package(px4_msgs REQUIRED)
 
@@ -31,21 +32,29 @@ add_executable(sentinelx_interceptor_node
   src/interceptor_main.cpp
   src/sentinelx_interceptor_node.cpp
 )
-ament_target_dependencies(sentinelx_interceptor_node rclcpp cuas_msgs)
+ament_target_dependencies(sentinelx_interceptor_node
+  rclcpp
+  cuas_msgs
+)
 target_link_libraries(sentinelx_interceptor_node "${cpp_typesupport_target}")
 
 add_executable(sentinelx_px4_control_node
   src/px4_control_main.cpp
   src/sentinelx_px4_control_node.cpp
 )
-ament_target_dependencies(sentinelx_px4_control_node rclcpp px4_msgs)
+ament_target_dependencies(sentinelx_px4_control_node
+  rclcpp
+  px4_msgs
+)
 target_link_libraries(sentinelx_px4_control_node "${cpp_typesupport_target}")
 
 add_executable(sentinelx_seeker_node
   src/seeker_main.cpp
   src/sentinelx_seeker_node.cpp
 )
-ament_target_dependencies(sentinelx_seeker_node rclcpp)
+ament_target_dependencies(sentinelx_seeker_node
+  rclcpp
+)
 target_link_libraries(sentinelx_seeker_node "${cpp_typesupport_target}")
 
 install(TARGETS
@@ -55,8 +64,21 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
-install(DIRECTORY include/ DESTINATION include)
-install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY
+  include/
+  DESTINATION include
+)
 
-ament_export_dependencies(rosidl_default_runtime cuas_msgs)
+install(DIRECTORY
+  launch/
+  DESTINATION share/${PROJECT_NAME}/launch
+)
+
+ament_export_dependencies(
+  rclcpp
+  rosidl_default_runtime
+  cuas_msgs
+  px4_msgs
+)
+
 ament_package()
