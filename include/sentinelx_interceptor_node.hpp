@@ -8,7 +8,7 @@
 #include "cuas_msgs/msg/target_track.hpp"
 #include "cuas_msgs/msg/interceptor_status.hpp"
 #include "cuas_msgs/msg/intercept_progress.hpp"
-#include "cuas_msgs/msg/interceptor_heartbeat.hpp"
+#include "cuas_msgs/msg/interceptor_snapshot.hpp"
 #include "cuas_msgs/msg/engagement_result.hpp"
 #include "cuas_msgs/msg/fault_report.hpp"
 #include "cuas_msgs/msg/c2_command.hpp"
@@ -52,7 +52,7 @@ private:
     *
     * C2가 생성한 요격 임무 정보와 포함된 표적 정보를 출력한다.
     */
-  void on_c2_missionCallback(const cuas_msgs::msg::InterceptMission::SharedPtr msg);
+  //void on_c2_missionCallback(const cuas_msgs::msg::InterceptMission::SharedPtr msg);
   /**
     * @brief 표적 추적 메시지 수신 콜백
     *
@@ -61,12 +61,10 @@ private:
   void on_c2_targetTrackCallback(const cuas_msgs::msg::TargetTrack::SharedPtr msg);
 
   void control_loop();
-  void heartbeat_loop();
 
   void publish_guidance();
-  void publish_status();
-  void publish_progress();
-  void publish_heartbeat();
+  //void publish_status();
+  void publish_snapshot();
   void publish_phase();
   void publish_target_estimate();
   void send_ack(const cuas_msgs::msg::C2Command & cmd, bool accepted, uint8_t code, const std::string & message);
@@ -102,17 +100,13 @@ private:
   rclcpp::Publisher<sentinelx::msg::InternalTargetEstimate>::SharedPtr target_estimate_pub_;
 
   rclcpp::Subscription<cuas_msgs::msg::C2Command>::SharedPtr c2_command_sub_;
-  rclcpp::Subscription<cuas_msgs::msg::InterceptMission>::SharedPtr intercept_mission_sub_;
   rclcpp::Subscription<cuas_msgs::msg::TargetTrack>::SharedPtr target_track_sub_;
   
   rclcpp::Publisher<cuas_msgs::msg::MissionAck>::SharedPtr mission_ack_pub_;
-  rclcpp::Publisher<cuas_msgs::msg::InterceptorStatus>::SharedPtr status_pub_;
-  rclcpp::Publisher<cuas_msgs::msg::InterceptProgress>::SharedPtr progress_pub_;
-  rclcpp::Publisher<cuas_msgs::msg::InterceptorHeartbeat>::SharedPtr heartbeat_pub_;
+  rclcpp::Publisher<cuas_msgs::msg::InterceptorSnapshot>::SharedPtr snapshot_pub_;
   rclcpp::Publisher<cuas_msgs::msg::EngagementResult>::SharedPtr result_pub_;
   rclcpp::Publisher<cuas_msgs::msg::FaultReport>::SharedPtr fault_pub_;
-
   rclcpp::TimerBase::SharedPtr control_timer_;
-  rclcpp::TimerBase::SharedPtr heartbeat_timer_;
+  rclcpp::TimerBase::SharedPtr snapshot_timer_;
 };
 
