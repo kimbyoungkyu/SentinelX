@@ -4,8 +4,7 @@
 
 using namespace std::chrono_literals;
 
-SentinelXSeekerNode::SentinelXSeekerNode()
-: Node("sentinelx_seeker_guidance_node"),
+SentinelXSeekerNode::SentinelXSeekerNode():PX4Listener("sentinelx_seeker_guidance_node"),  
   interceptor_id_(declare_parameter<std::string>("interceptor_id", "INT001")),
   target_id_(declare_parameter<std::string>("target_id", "")),
   simulate_detection_(declare_parameter<bool>("simulate_detection", false)),
@@ -27,15 +26,6 @@ SentinelXSeekerNode::SentinelXSeekerNode()
     std::bind(&SentinelXSeekerNode::image_callback, this, std::placeholders::_1));    
 
 
-  // 2. Camera Image Subscriber (Humble 표준 QoS 적용 및 오타 수정)
-  /*
-  
-  image_sub_ = this->create_subscription<sensor_msgs::msg::Image>(  // :: 로 수정
-    "/" + interceptor_id_ + "/camera/image_raw",                  // _ 추가
-    qos_profile,
-    std::bind(&SentinelXSeekerNode::image_callback, this, std::placeholders::_1));    
-    */
-
   // 3. Publishers
   status_pub_ = create_publisher<sentinelx::msg::SeekerStatus>("/sentinelx/seeker/status", 10);
   track_pub_  = create_publisher<sentinelx::msg::SeekerTrack>("/sentinelx/seeker/track", 10);
@@ -44,7 +34,6 @@ SentinelXSeekerNode::SentinelXSeekerNode()
   // 4. Timer (chrono_literals 네임스페이스 활성화 상태 기준, 안 된다면 std::chrono::milliseconds(100) 사용)
   using namespace std::chrono_literals; 
   timer_ = create_wall_timer(100ms, std::bind(&SentinelXSeekerNode::publish_seeker, this));
-
   RCLCPP_INFO(get_logger(), "SentinelX Seeker guidance node started");
 }
 void SentinelXSeekerNode::on_phase(const sentinelx::msg::InterceptorPhase::SharedPtr msg)
@@ -55,7 +44,26 @@ void SentinelXSeekerNode::on_phase(const sentinelx::msg::InterceptorPhase::Share
   }
 }
 
-
+void SentinelXSeekerNode::onPX4Updated(){
+    if (px4_ready()) {
+      RCLCPP_INFO(this->get_logger(), "Seeker Node received PX4 update");
+    }
+    
+}
+  /*
+  if (has_status()){
+    RCLCPP_INFO(this->get_logger(), "has_status");
+  }
+  if (has_local_position()){
+    RCLCPP_INFO(this->get_logger(), "has_local_position");
+  }
+  if (has_global_position()){
+    RCLCPP_INFO(this->get_logger(), "has_global_position");
+  }
+  if (has_battery()){
+    RCLCPP_INFO(this->get_logger(), "has_battery");
+}
+    */
 void SentinelXSeekerNode::image_callback(const sensor_msgs::msg::Image::ConstSharedPtr msg) const
 {
     // 이미지 메타데이터 출력 예시

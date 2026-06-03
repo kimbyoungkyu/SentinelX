@@ -13,13 +13,13 @@
 #include "cuas_msgs/msg/fault_report.hpp"
 #include "cuas_msgs/msg/c2_command.hpp"
 #include "cuas_msgs/msg/intercept_mission.hpp"
-
 #include "sentinelx/msg/guidance_command.hpp"
 #include "sentinelx/msg/px4_vehicle_state.hpp"
 #include "sentinelx/msg/seeker_status.hpp"
 #include "sentinelx/msg/seeker_track.hpp"
 #include "sentinelx/msg/interceptor_phase.hpp"
 #include "sentinelx/msg/internal_target_estimate.hpp"
+#include "PX4Listener.hpp"
 
 enum class Phase : uint8_t
 {
@@ -37,7 +37,7 @@ enum class Phase : uint8_t
   Fault = 11
 };
 
-class SentinelXInterceptorNode : public rclcpp::Node
+class SentinelXInterceptorNode : public PX4Listener
 {
 public:
   SentinelXInterceptorNode();
@@ -63,7 +63,6 @@ private:
   void control_loop();
 
   void publish_guidance();
-  //void publish_status();
   void publish_snapshot();
   void publish_phase();
   void publish_target_estimate();
@@ -72,6 +71,10 @@ private:
   bool c2_command_allowed_after_launch(uint8_t command_type) const;
   uint8_t to_cuas_state() const;
   uint8_t to_cuas_progress_phase() const;
+
+
+
+  virtual void onPX4Updated() override;
 
   std::string interceptor_id_;
   std::string mission_id_;

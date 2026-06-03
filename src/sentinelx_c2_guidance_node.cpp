@@ -1,10 +1,17 @@
+/*
+  C2에서 보내주는 정보를 바탕으로 유도 명령을 생성하여 발행하는 노드입니다. 또한, C2로부터의 명령을 수신하여 인터셉터의 상태를 관리하고, 내부적으로 시커 트랙과 상태 정보를 바탕으로 타겟 추정치를 생성하여 발행합니다. 주요 기능은 다음과 같습니다:
+1. C2 명령 수신 및 처리: C2로부터 ASSIGN_TARGET, START_INTERCEPT, ABORT 명령을 수신하여 인터셉터의 미션과 타겟을 관리합니다. 각 명령에 대해 적절한 ACK 메시지를 발행하여 수신 결과를 C2에 통보합니다.
+2. 시커 상태 및 트랙 정보 발행: 시커의 상태(준비, 타겟 탐지, 타�겟 잠금 여부 등)와 타겟 트랙 정보를 주기적으로 발행하여 다른 노드에서 활용할 수 있도록 합니다.
+3. 인터셉터 상태 관리: C2 명령과 시커 정보를 바탕으로 인터셉터의 현재 상태(예: Idle, MissionLoaded, InertialMidcourse, SeekerSearch, TerminalHoming 등)를 관리하고, 이를 C2에 발행하여 미션 진행 상황을 통보합니다.
+4. 타겟 추정치 생성: 시커 트랙과 C2로부터의 타            
+*/
 #include "sentinelx_c2_guidance_node.hpp"
 
 #include <chrono>
 
 using namespace std::chrono_literals;
 
-SentinelXC2GuidanceNode::SentinelXC2GuidanceNode(): Node("sentinelx_seeker_guidance_node"),
+SentinelXC2GuidanceNode::SentinelXC2GuidanceNode():PX4Listener("sentinelx_c2_guidance_node"),
   interceptor_id_(declare_parameter<std::string>("interceptor_id", "SX-INT-001")),
   target_id_(declare_parameter<std::string>("target_id", "")),
   simulate_detection_(declare_parameter<bool>("simulate_detection", false)),
@@ -29,6 +36,13 @@ void SentinelXC2GuidanceNode::on_phase(const sentinelx::msg::InterceptorPhase::S
   if (!msg->target_id.empty()) {
     target_id_ = msg->target_id;
   }
+}
+
+void SentinelXC2GuidanceNode::onPX4Updated(){
+      if (px4_ready()) {
+      RCLCPP_INFO(this->get_logger(), "C2 Node received PX4 update");
+    }
+
 }
 
 void SentinelXC2GuidanceNode::publish_seeker()

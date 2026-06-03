@@ -1,7 +1,34 @@
 #include "sentinelx_px4_control_node.hpp"
+#include <px4_msgs/msg/vehicle_status.hpp>
+#include <px4_msgs/msg/vehicle_local_position.hpp>
+#include <px4_msgs/msg/vehicle_global_position.hpp>
+#include <px4_msgs/msg/battery_status.hpp>
+#include <px4_msgs/msg/vehicle_status.hpp>
 #include <chrono>
 
 using namespace std::chrono_literals;
+using px4_msgs::msg::VehicleStatus;
+//using px4_msgs::msg::VehicleStatusV4;
+
+std::string modeToString(uint8_t nav_state)
+{
+    switch (nav_state)
+    {
+    case VehicleStatus::NAVIGATION_STATE_MANUAL: return "MANUAL";
+    case VehicleStatus::NAVIGATION_STATE_ALTCTL: return "ALTCTL";
+    case VehicleStatus::NAVIGATION_STATE_POSCTL: return "POSCTL";
+    case VehicleStatus::NAVIGATION_STATE_AUTO_MISSION: return "AUTO_MISSION";
+    case VehicleStatus::NAVIGATION_STATE_AUTO_LOITER: return "AUTO_LOITER";
+    case VehicleStatus::NAVIGATION_STATE_AUTO_RTL: return "AUTO_RTL";
+    case VehicleStatus::NAVIGATION_STATE_ACRO: return "ACRO";
+    case VehicleStatus::NAVIGATION_STATE_OFFBOARD: return "OFFBOARD";
+    case VehicleStatus::NAVIGATION_STATE_STAB: return "STABILIZED";
+    case VehicleStatus::NAVIGATION_STATE_AUTO_TAKEOFF: return "AUTO_TAKEOFF";
+    case VehicleStatus::NAVIGATION_STATE_AUTO_LAND: return "AUTO_LAND";
+    case VehicleStatus::NAVIGATION_STATE_ORBIT: return "ORBIT";
+    default: return "UNKNOWN";
+    }
+}
 
 SentinelXPX4ControlNode::SentinelXPX4ControlNode()
 : Node("sentinelx_px4_control_node"),
@@ -9,26 +36,23 @@ SentinelXPX4ControlNode::SentinelXPX4ControlNode()
   dry_run_(declare_parameter<bool>("dry_run", true)),
   connected_(false),
   has_status_(false),
-  has_local_position_(false),
-  has_global_position_(false),
+  has_local_position_(true),
+  has_global_position_(true),
   has_battery_(false)
 {
-  auto px4_qos = rclcpp::QoS(rclcpp::KeepLast(10))
-                   .best_effort()
-                   .durability_volatile();
-
+  auto px4_qos = rclcpp::QoS(rclcpp::KeepLast(10)).best_effort().durability_volatile();
   guidance_sub_ = create_subscription<sentinelx::msg::GuidanceCommand>(
     "/sentinelx/guidance/command",
     10,
     std::bind(&SentinelXPX4ControlNode::on_guidance_command, this, std::placeholders::_1));
 
   vehicle_status_sub_ = create_subscription<px4_msgs::msg::VehicleStatus>(
-    "/fmu/out/vehicle_status",
+    "/fmu/out/vehicle_status_v4",
     px4_qos,
     std::bind(&SentinelXPX4ControlNode::on_vehicle_status, this, std::placeholders::_1));
 
   local_position_sub_ = create_subscription<px4_msgs::msg::VehicleLocalPosition>(
-    "/fmu/out/vehicle_local_position",
+    "/fmu/out/vehicle_local_position_v1",
     px4_qos,
     std::bind(&SentinelXPX4ControlNode::on_local_position, this, std::placeholders::_1));
 
@@ -60,8 +84,7 @@ SentinelXPX4ControlNode::SentinelXPX4ControlNode()
     dry_run_ ? "true" : "false");
 }
 
-void SentinelXPX4ControlNode::on_guidance_command(
-  const sentinelx::msg::GuidanceCommand::SharedPtr msg)
+void SentinelXPX4ControlNode::on_guidance_command(const sentinelx::msg::GuidanceCommand::SharedPtr msg)
 {
   last_guidance_ = *msg;
 
@@ -83,12 +106,18 @@ void SentinelXPX4ControlNode::on_guidance_command(
     sentinelx::msg::InterceptorHealth::SEVERITY_WARN);
 }
 
-void SentinelXPX4ControlNode::on_vehicle_status(
-  const px4_msgs::msg::VehicleStatus::SharedPtr msg)
+void SentinelXPX4ControlNode::on_vehicle_status(const px4_msgs::msg::VehicleStatus::SharedPtr msg)
 {
   vehicle_status_ = *msg;
   has_status_ = true;
   connected_ = true;
+
+   bool armed = msg->arming_state == VehicleStatus::ARMING_STATE_ARMED;
+   bool offboard = msg->nav_state == VehicleStatus::NAVIGATION_STATE_OFFBOARD;
+
+  RCLCPP_INFO_THROTTLE(get_logger(),*get_clock(),1000,"[VehicleStatus] armed=%d offboard=%d",armed, offboard);
+
+
 
   RCLCPP_INFO_THROTTLE(
     get_logger(),
@@ -100,8 +129,7 @@ void SentinelXPX4ControlNode::on_vehicle_status(
     msg->failsafe);
 }
 
-void SentinelXPX4ControlNode::on_local_position(
-  const px4_msgs::msg::VehicleLocalPosition::SharedPtr msg)
+void SentinelXPX4ControlNode::on_local_position(const px4_msgs::msg::VehicleLocalPosition::SharedPtr msg)
 {
   local_position_ = *msg;
   has_local_position_ = true;
@@ -120,8 +148,7 @@ void SentinelXPX4ControlNode::on_local_position(
     msg->heading);
 }
 
-void SentinelXPX4ControlNode::on_global_position(
-  const px4_msgs::msg::VehicleGlobalPosition::SharedPtr msg)
+void SentinelXPX4ControlNode::on_global_position(const px4_msgs::msg::VehicleGlobalPosition::SharedPtr msg)
 {
   global_position_ = *msg;
   has_global_position_ = true;
@@ -136,8 +163,7 @@ void SentinelXPX4ControlNode::on_global_position(
     msg->alt);
 }
 
-void SentinelXPX4ControlNode::on_battery_status(
-  const px4_msgs::msg::BatteryStatus::SharedPtr msg)
+void SentinelXPX4ControlNode::on_battery_status(const px4_msgs::msg::BatteryStatus::SharedPtr msg)
 {
   battery_status_ = *msg;
   has_battery_ = true;
@@ -196,6 +222,7 @@ void SentinelXPX4ControlNode::publish_state()
 
   state_pub_->publish(msg);
 
+  /*
   RCLCPP_INFO_THROTTLE(
     get_logger(),
     *get_clock(),
@@ -208,12 +235,10 @@ void SentinelXPX4ControlNode::publish_state()
     msg.local_y_m,
     msg.local_z_m,
     msg.battery_remaining * 100.0f);
+    */
 }
 
-void SentinelXPX4ControlNode::publish_health(
-  const std::string & message,
-  bool healthy,
-  uint8_t severity)
+void SentinelXPX4ControlNode::publish_health(const std::string & message, bool healthy, uint8_t severity)
 {
   sentinelx::msg::InterceptorHealth msg;
   msg.stamp = now();
@@ -225,12 +250,15 @@ void SentinelXPX4ControlNode::publish_health(
 
   health_pub_->publish(msg);
 
+
+  /*
   RCLCPP_WARN(
     get_logger(),
     "[Health] healthy=%d severity=%u message=%s",
     healthy,
     severity,
     message.c_str());
+    */
 }
 
 int main(int argc, char ** argv)

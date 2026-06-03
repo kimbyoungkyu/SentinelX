@@ -7,8 +7,9 @@
 #include "sentinelx/msg/seeker_track.hpp"
 #include "sentinelx/msg/interceptor_phase.hpp"
 #include "sentinelx/msg/interceptor_health.hpp"
+#include "PX4Listener.hpp"
 
-class SentinelXC2GuidanceNode : public rclcpp::Node
+class SentinelXC2GuidanceNode : public PX4Listener
 {
 public:
   SentinelXC2GuidanceNode();
@@ -16,6 +17,9 @@ public:
 private:
   void on_phase(const sentinelx::msg::InterceptorPhase::SharedPtr msg);
   void publish_seeker();
+
+
+  virtual void onPX4Updated() override;
 
   std::string interceptor_id_;
   std::string target_id_;
@@ -31,7 +35,6 @@ private:
   rclcpp::TimerBase::SharedPtr timer_;
 
   rclcpp::TimerBase::SharedPtr tHeartbeat_;
-
   
 };
 

@@ -20,7 +20,7 @@ def generate_launch_description():
                 "PX4_HOME_LAT": "0.0",
                 "PX4_HOME_LON": "0.0",
                 "PX4_HOME_ALT": "50.0",
-                "PX4_SYS_AUTOSTART": "4001",
+             #   "PX4_SYS_AUTOSTART": "4001",
             }
         ),        
         

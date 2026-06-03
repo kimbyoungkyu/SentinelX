@@ -7,8 +7,9 @@
 #include "sentinelx/msg/seeker_track.hpp"
 #include "sentinelx/msg/interceptor_phase.hpp"
 #include "sentinelx/msg/interceptor_health.hpp"
+#include "PX4Listener.hpp"
 
-class SentinelXSeekerNode : public rclcpp::Node
+class SentinelXSeekerNode : public PX4Listener
 {
 public:
   SentinelXSeekerNode();
@@ -19,7 +20,7 @@ private:
   void image_callback(const sensor_msgs::msg::Image::ConstSharedPtr msg) const;
 
 
-
+  virtual void onPX4Updated() override;
 
 
   void on_phase(const sentinelx::msg::InterceptorPhase::SharedPtr msg);
