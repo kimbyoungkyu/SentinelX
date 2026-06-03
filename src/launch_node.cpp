@@ -13,9 +13,7 @@ inline rclcpp::QoS BestEffortTelemetryQoS()
   return rclcpp::QoS(rclcpp::KeepLast(100)).best_effort().durability_volatile();
 }
 
-
-LaunchNode::LaunchNode() 
-    :PX4Listener("launch_node"),  
+LaunchNode::LaunchNode():PX4Listener("launch_node"),  
     interceptor_id_(declare_parameter<std::string>("interceptor_id", "SX-INT-001")),
     mission_id_(""),
     target_id_(""),
@@ -51,13 +49,6 @@ LaunchNode::LaunchNode()
 
   control_timer_ = create_wall_timer(50ms,std::bind(&LaunchNode::control_loop, this));
   snapshot_timer_ = create_wall_timer(100ms,std::bind(&LaunchNode::publish_snapshot, this));
-
-
-
-
-
-
-
 
   RCLCPP_INFO(get_logger(), "SentinelX interceptor node started in fire-and-forget mode");
 }
@@ -215,7 +206,7 @@ void LaunchNode::onPX4Updated()
 {
   if (px4_ready()) {
     healthy_ = true;
-    RCLCPP_INFO(this->get_logger(), "PX4 Ready!!!!");
+    RCLCPP_INFO(this->get_logger(), "Launch Node Ready!!!!");
   } else {
     healthy_ = false;
   }

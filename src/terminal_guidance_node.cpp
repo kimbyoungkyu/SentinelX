@@ -45,24 +45,11 @@ void TerminalGuidanceNode::on_phase(const sentinelx::msg::InterceptorPhase::Shar
 
 void TerminalGuidanceNode::onPX4Updated(){
     if (px4_ready()) {
-      RCLCPP_INFO(this->get_logger(), "Seeker Node received PX4 update");
+      RCLCPP_INFO(this->get_logger(), "Terminal Guidance Node Ready!!!!");
     }
     
 }
-  /*
-  if (has_status()){
-    RCLCPP_INFO(this->get_logger(), "has_status");
-  }
-  if (has_local_position()){
-    RCLCPP_INFO(this->get_logger(), "has_local_position");
-  }
-  if (has_global_position()){
-    RCLCPP_INFO(this->get_logger(), "has_global_position");
-  }
-  if (has_battery()){
-    RCLCPP_INFO(this->get_logger(), "has_battery");
-}
-    */
+
 void TerminalGuidanceNode::image_callback(const sensor_msgs::msg::Image::ConstSharedPtr msg) const
 {
     // 이미지 메타데이터 출력 예시

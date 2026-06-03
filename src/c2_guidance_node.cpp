@@ -40,7 +40,7 @@ void C2GuidanceNode::on_phase(const sentinelx::msg::InterceptorPhase::SharedPtr 
 
 void C2GuidanceNode::onPX4Updated(){
       if (px4_ready()) {
-      RCLCPP_INFO(this->get_logger(), "C2 Node received PX4 update");
+      RCLCPP_INFO(this->get_logger(), "C2 Node Ready!!!!");
     }
 
 }
