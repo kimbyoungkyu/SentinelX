@@ -33,30 +33,38 @@ LaunchNode::LaunchNode():PX4Proxy("launch_node"),
   rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
   auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 5), qos_profile);
 
-  c2_command_sub_    = create_subscription<cuas_msgs::msg::C2Command>("/cuas/c2/command",qos,std::bind(&LaunchNode::on_c2_command, this, std::placeholders::_1));
-  target_track_sub_  = create_subscription<cuas_msgs::msg::TargetTrack>("/cuas/c2/target_track",qos,std::bind(&LaunchNode::on_c2_targetTrackCallback, this, std::placeholders::_1));
+  c2_command_sub_    = create_subscription<cuas_msgs::msg::C2Command>("/cuas/c2/command",qos,std::bind(&LaunchNode::onC2Command, this, std::placeholders::_1));
+  target_track_sub_  = create_subscription<cuas_msgs::msg::TargetTrack>("/cuas/c2/target_track",qos,std::bind(&LaunchNode::onC2TargetTrack, this, std::placeholders::_1));
+
+  /*
   px4_state_sub_     = create_subscription<sentinelx::msg::PX4VehicleState>("/sentinelx/px4/state",10,std::bind(&LaunchNode::on_px4_state, this, std::placeholders::_1));
   seeker_status_sub_ = create_subscription<sentinelx::msg::SeekerStatus>("/sentinelx/seeker/status",10,std::bind(&LaunchNode::on_seeker_status, this, std::placeholders::_1));
   seeker_track_sub_  = create_subscription<sentinelx::msg::SeekerTrack>("/sentinelx/seeker/track", 10,std::bind(&LaunchNode::on_seeker_track, this, std::placeholders::_1));
+  */
 
+  
+  
+  
+  /*
   guidance_pub_ = create_publisher<sentinelx::msg::GuidanceCommand>("/sentinelx/guidance/command", 10);
   phase_pub_ = create_publisher<sentinelx::msg::InterceptorPhase>("/sentinelx/interceptor/phase", 10);
   target_estimate_pub_ = create_publisher<sentinelx::msg::InternalTargetEstimate>("/sentinelx/interceptor/target_estimate", 10);
+  */
   mission_ack_pub_ = create_publisher<cuas_msgs::msg::MissionAck>("/cuas/interceptor/ack", ReliableControlQoS());
   result_pub_ = create_publisher<cuas_msgs::msg::EngagementResult>("/cuas/interceptor/result", ReliableControlQoS());
   fault_pub_ = create_publisher<cuas_msgs::msg::FaultReport>("/cuas/interceptor/fault", ReliableControlQoS());
   snapshot_pub_ = create_publisher<cuas_msgs::msg::InterceptorSnapshot>("/cuas/interceptor/snapshot",BestEffortTelemetryQoS());
 
-  control_timer_ = create_wall_timer(50ms,std::bind(&LaunchNode::control_loop, this));
-  snapshot_timer_ = create_wall_timer(100ms,std::bind(&LaunchNode::publish_snapshot, this));
+  control_timer_ = create_wall_timer(50ms,std::bind(&LaunchNode::controlLoop, this));
+  snapshot_timer_ = create_wall_timer(100ms,std::bind(&LaunchNode::publishSnapshot, this));
 
   RCLCPP_INFO(get_logger(), "SentinelX interceptor node started in fire-and-forget mode");
 }
 
-void LaunchNode::on_c2_command(const cuas_msgs::msg::C2Command::SharedPtr msg)
+void LaunchNode::onC2Command(const cuas_msgs::msg::C2Command::SharedPtr msg)
 {
   if (launched_ && !c2_command_allowed_after_launch(msg->command_type)) {
-    send_ack(*msg,false,cuas_msgs::msg::MissionAck::REJECTED,"C2 command ignored after launch; only ABORT is accepted");
+    sendAck(*msg,false,cuas_msgs::msg::MissionAck::REJECTED,"C2 command ignored after launch; only ABORT is accepted");
     return;
   }
 
@@ -67,12 +75,12 @@ void LaunchNode::on_c2_command(const cuas_msgs::msg::C2Command::SharedPtr msg)
         msg->mission_id.c_str(), msg->target_id.c_str());
 
       if (launched_) {
-        send_ack(*msg,false,cuas_msgs::msg::MissionAck::REJECTED,"cannot assign target after launch");
+        sendAck(*msg,false,cuas_msgs::msg::MissionAck::REJECTED,"cannot assign target after launch");
         return;
       }
 
       if (msg->mission_id.empty() || msg->target_id.empty()) {
-        send_ack(*msg,false,cuas_msgs::msg::MissionAck::REJECTED,"mission_id or target_id is empty");
+        sendAck(*msg,false,cuas_msgs::msg::MissionAck::REJECTED,"mission_id or target_id is empty");
         return;
       }
 
@@ -84,7 +92,7 @@ void LaunchNode::on_c2_command(const cuas_msgs::msg::C2Command::SharedPtr msg)
       seeker_detected_ = false;
       seeker_locked_ = false;
 
-      send_ack(*msg,true,cuas_msgs::msg::MissionAck::OK,"target assigned; interceptor is ready for START_INTERCEPT");
+      sendAck(*msg,true,cuas_msgs::msg::MissionAck::OK,"target assigned; interceptor is ready for START_INTERCEPT");
       break;
     }
 
@@ -92,18 +100,18 @@ void LaunchNode::on_c2_command(const cuas_msgs::msg::C2Command::SharedPtr msg)
     {
       RCLCPP_INFO(get_logger(), "C2Command::START_INTERCEPT received: mission_id=%s, target_id=%s",msg->mission_id.c_str(), msg->target_id.c_str()); 
       if (launched_) {
-        send_ack(*msg,false,cuas_msgs::msg::MissionAck::REJECTED,"interceptor already launched");
+        sendAck(*msg,false,cuas_msgs::msg::MissionAck::REJECTED,"interceptor already launched");
         return;
       }
 
       if (mission_id_.empty() || target_id_.empty()) {
-        send_ack(*msg,false,cuas_msgs::msg::MissionAck::REJECTED,"no assigned mission or target");
+        sendAck(*msg,false,cuas_msgs::msg::MissionAck::REJECTED,"no assigned mission or target");
         return;
       }
 
       launched_ = true;
       phase_ = Phase::InertialMidcourse;
-      send_ack(*msg,true,cuas_msgs::msg::MissionAck::OK,"START_INTERCEPT accepted; interceptor launched");
+      sendAck(*msg,true,cuas_msgs::msg::MissionAck::OK,"START_INTERCEPT accepted; interceptor launched");
       break;
     }
     case cuas_msgs::msg::C2Command::ABORT:
@@ -120,7 +128,7 @@ void LaunchNode::on_c2_command(const cuas_msgs::msg::C2Command::SharedPtr msg)
       launched_ = false;
       seeker_detected_ = false;
       seeker_locked_ = false;
-      send_ack(*msg,true,cuas_msgs::msg::MissionAck::OK,"ABORT accepted; safe action will be selected internally");
+      sendAck(*msg,true,cuas_msgs::msg::MissionAck::OK,"ABORT accepted; safe action will be selected internally");
       break;
     }
 
@@ -138,20 +146,20 @@ void LaunchNode::on_c2_command(const cuas_msgs::msg::C2Command::SharedPtr msg)
       launched_ = false;
       seeker_detected_ = false;
       seeker_locked_ = false;
-      send_ack(*msg,true,cuas_msgs::msg::MissionAck::OK,"HIT accepted; safe action will be selected internally");
+      sendAck(*msg,true,cuas_msgs::msg::MissionAck::OK,"HIT accepted; safe action will be selected internally");
       break;
     }
 
     
     default:
     {
-      send_ack(*msg,false,cuas_msgs::msg::MissionAck::REJECTED,"unsupported command; allowed commands are ASSIGN_TARGET, START_INTERCEPT, ABORT");
+      sendAck(*msg,false,cuas_msgs::msg::MissionAck::REJECTED,"unsupported command; allowed commands are ASSIGN_TARGET, START_INTERCEPT, ABORT");
       break;
     }
   }
 }
 
-void LaunchNode::on_c2_targetTrackCallback(const cuas_msgs::msg::TargetTrack::SharedPtr msg)
+void LaunchNode::onC2TargetTrack(const cuas_msgs::msg::TargetTrack::SharedPtr msg)
 {
   if (!target_id_.empty() && msg->target_id != target_id_) {
     return;
@@ -160,6 +168,7 @@ void LaunchNode::on_c2_targetTrackCallback(const cuas_msgs::msg::TargetTrack::Sh
   has_c2_track_ = true;
 }
 
+/*
 void LaunchNode::on_px4_state(const sentinelx::msg::PX4VehicleState::SharedPtr msg)
 {
   latest_px4_state_ = *msg;
@@ -189,17 +198,17 @@ void LaunchNode::on_seeker_track(const sentinelx::msg::SeekerTrack::SharedPtr ms
     seeker_detected_ = true;
   }
 }
-
-void LaunchNode::control_loop()
+*/
+void LaunchNode::controlLoop()
 {
   if (launched_ && seeker_locked_) {
     phase_ = Phase::TerminalHoming;
   } else if (launched_ && seeker_detected_ && phase_ == Phase::InertialMidcourse) {
     phase_ = Phase::SeekerSearch;
   }
-  publish_guidance();
-  publish_phase();
-  publish_target_estimate();
+  //publish_guidance();
+  //publish_phase();
+  //publish_target_estimate();
 }
 
 void LaunchNode::onPX4Updated()
@@ -211,6 +220,8 @@ void LaunchNode::onPX4Updated()
     healthy_ = false;
   }
 }
+
+/*
 void LaunchNode::publish_guidance()
 {
   sentinelx::msg::GuidanceCommand msg;
@@ -239,8 +250,10 @@ void LaunchNode::publish_guidance()
 
   guidance_pub_->publish(msg);
 }
+*/
 
-void LaunchNode::publish_snapshot()
+
+void LaunchNode::publishSnapshot()
 {
   //px4가 준비된 상태가 아니면 보내지 않는다.
   if (!px4_ready()) return;
@@ -272,6 +285,8 @@ void LaunchNode::publish_snapshot()
   snapshot_pub_->publish(msg);
 }
 
+
+/*
 void LaunchNode::publish_phase()
 {
   sentinelx::msg::InterceptorPhase msg;
@@ -312,8 +327,10 @@ void LaunchNode::publish_target_estimate()
 
   target_estimate_pub_->publish(msg);
 }
+*/
 
-void LaunchNode::send_ack(const cuas_msgs::msg::C2Command & cmd,bool accepted,uint8_t code,const std::string & message)
+
+void LaunchNode::sendAck(const cuas_msgs::msg::C2Command & cmd,bool accepted,uint8_t code,const std::string & message)
 {
   cuas_msgs::msg::MissionAck ack;
   ack.stamp = now();
@@ -381,7 +398,8 @@ uint8_t LaunchNode::to_cuas_progress_phase() const
     case Phase::InterceptSuccess:
       return cuas_msgs::msg::InterceptProgress::COMPLETED;
 
-    case Phase::InterceptFailed:
+    
+      case Phase::InterceptFailed:
       return cuas_msgs::msg::InterceptProgress::FAILED;
 
     case Phase::ReturnHome:

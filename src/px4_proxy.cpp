@@ -1,5 +1,4 @@
 #include "px4_proxy.hpp"
-
 #include <limits>
 
 using std::placeholders::_1;

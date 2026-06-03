@@ -11,7 +11,7 @@
 
 using namespace std::chrono_literals;
 
-C2GuidanceNode::C2GuidanceNode():PX4Proxy("sentinelx_c2_guidance_node"),
+C2GuidanceNode::C2GuidanceNode():PX4Proxy("c2_guidance_node"),
   interceptor_id_(declare_parameter<std::string>("interceptor_id", "SX-INT-001")),
   target_id_(declare_parameter<std::string>("target_id", "")),
   simulate_detection_(declare_parameter<bool>("simulate_detection", false)),
@@ -19,32 +19,73 @@ C2GuidanceNode::C2GuidanceNode():PX4Proxy("sentinelx_c2_guidance_node"),
   frame_id_(0U),
   current_phase_(sentinelx::msg::InterceptorPhase::PHASE_IDLE)
 {
+
+  /*
   phase_sub_ = create_subscription<sentinelx::msg::InterceptorPhase>(
     "/sentinelx/interceptor/phase", 10,
-    std::bind(&C2GuidanceNode::on_phase, this, std::placeholders::_1));
+    std::bind(&C2GuidanceNode::onPhase, this, std::placeholders::_1));
 
-  status_pub_ = create_publisher<sentinelx::msg::SeekerStatus>("/sentinelx/seeker/status", 10);
-  track_pub_ = create_publisher<sentinelx::msg::SeekerTrack>("/sentinelx/seeker/track", 10);
-  health_pub_ = create_publisher<sentinelx::msg::InterceptorHealth>("/sentinelx/health", 10);
-  timer_ = create_wall_timer(100ms, std::bind(&C2GuidanceNode::publish_seeker, this));
+    */
+
+  rmw_qos_profile_t qos_profile = rmw_qos_profile_sensor_data;
+  auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 5), qos_profile);
+
+
+  c2_command_sub_    = create_subscription<cuas_msgs::msg::C2Command>("/cuas/c2/command",qos,std::bind(&C2GuidanceNode::onC2Command, this, std::placeholders::_1));
+  target_track_sub_  = create_subscription<cuas_msgs::msg::TargetTrack>("/cuas/c2/target_track",10,std::bind(&C2GuidanceNode::onTargetTrack, this, std::placeholders::_1));
+
+
+
+  //status_pub_ = create_publisher<sentinelx::msg::SeekerStatus>("/sentinelx/seeker/status", 10);
+  //track_pub_ = create_publisher<sentinelx::msg::SeekerTrack>("/sentinelx/seeker/track", 10);
+  //health_pub_ = create_publisher<sentinelx::msg::InterceptorHealth>("/sentinelx/health", 10);
+  //timer_ = create_wall_timer(100ms, std::bind(&C2GuidanceNode::publish_seeker, this));
   RCLCPP_INFO(get_logger(), "SentinelX C2 guidance node started");
 }
 
-void C2GuidanceNode::on_phase(const sentinelx::msg::InterceptorPhase::SharedPtr msg)
+/*
+void C2GuidanceNode::onPhase(const sentinelx::msg::InterceptorPhase::SharedPtr msg)
 {
   current_phase_ = msg->phase;
   if (!msg->target_id.empty()) {
     target_id_ = msg->target_id;
   }
 }
+*/
 
-void C2GuidanceNode::onPX4Updated(){
-      if (px4_ready()) {
-      RCLCPP_INFO(this->get_logger(), "C2 Node Ready!!!!");
-    }
+
+void C2GuidanceNode::onC2Command(const cuas_msgs::msg::C2Command::SharedPtr msg)
+{
+
+}
+void C2GuidanceNode::onTargetTrack(const cuas_msgs::msg::TargetTrack::SharedPtr msg){
 
 }
 
+void C2GuidanceNode::onPX4Updated(){
+    if (px4_ready()) {
+      //RCLCPP_INFO(this->get_logger(), "C2 Node Ready!!!!");
+    }
+}
+
+
+
+void C2GuidanceNode::sendAck(const cuas_msgs::msg::C2Command & cmd,bool accepted,uint8_t code,const std::string & message)
+{
+  cuas_msgs::msg::MissionAck ack;
+  ack.stamp = now();
+  ack.command_id = cmd.command_id;
+  ack.mission_id = cmd.mission_id;
+  ack.interceptor_id = cmd.interceptor_id.empty() ? interceptor_id_ : cmd.interceptor_id;
+  ack.accepted = accepted;
+  ack.result_code = code;
+  ack.message = message;
+
+  mission_ack_pub_->publish(ack);
+}
+
+
+#if 0
 void C2GuidanceNode::publish_seeker()
 {
   ++frame_id_;
@@ -82,8 +123,9 @@ void C2GuidanceNode::publish_seeker()
   track.bbox_width = status.target_detected ? 0.1F : 0.0F;
   track.bbox_height = status.target_detected ? 0.1F : 0.0F;
   track.confidence = status.target_locked ? 0.85F : status.detection_confidence;
-  track_pub_->publish(track);
+  //track_pub_->publish(track);
 }
+#endif
 
 int main(int argc, char ** argv)
 {

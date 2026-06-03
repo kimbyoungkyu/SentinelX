@@ -1,7 +1,6 @@
 #pragma once
 
 #include <rclcpp/rclcpp.hpp>
-
 #include <px4_msgs/msg/vehicle_odometry.hpp>
 #include <px4_msgs/msg/vehicle_status.hpp>
 #include <px4_msgs/msg/vehicle_control_mode.hpp>
@@ -12,7 +11,6 @@
 #include <px4_msgs/msg/vehicle_command_ack.hpp>
 #include <px4_msgs/msg/estimator_status_flags.hpp>
 #include <px4_msgs/msg/wind.hpp>
-
 #include <px4_msgs/msg/vehicle_command.hpp>
 #include <px4_msgs/msg/offboard_control_mode.hpp>
 #include <px4_msgs/msg/trajectory_setpoint.hpp>
@@ -25,9 +23,7 @@
 class PX4Proxy : public rclcpp::Node
 {
 public:
-  explicit PX4Proxy(
-    const std::string & node_name,
-    const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
+  explicit PX4Proxy(const std::string & node_name,const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
 protected:
   rclcpp::QoS px4TelemetryQoS() const;
@@ -64,15 +60,7 @@ protected:
 
   virtual void onPX4Updated() {}
 
-  void publishVehicleCommand(
-    uint16_t command,
-    float param1 = 0.0f,
-    float param2 = 0.0f,
-    float param3 = 0.0f,
-    float param4 = 0.0f,
-    float param5 = 0.0f,
-    float param6 = 0.0f,
-    float param7 = 0.0f);
+  void publishVehicleCommand(uint16_t command,float param1 = 0.0f,float param2 = 0.0f,float param3 = 0.0f,float param4 = 0.0f,float param5 = 0.0f,float param6 = 0.0f,float param7 = 0.0f);
 
   void arm();
   void disarm();
@@ -85,30 +73,10 @@ protected:
   void publishOffboardControlModeAttitude();
   void publishOffboardControlModeBodyRate();
 
-  void publishTrajectorySetpointPosition(
-    float x_m,
-    float y_m,
-    float z_m,
-    float yaw_rad = 0.0f);
-
-  void publishTrajectorySetpointVelocity(
-    float vx_mps,
-    float vy_mps,
-    float vz_mps,
-    float yaw_rad = 0.0f);
-
-  void publishAttitudeSetpoint(
-    float qw,
-    float qx,
-    float qy,
-    float qz,
-    float thrust_z);
-
-  void publishRatesSetpoint(
-    float roll_rate,
-    float pitch_rate,
-    float yaw_rate,
-    float thrust_body_z);
+  void publishTrajectorySetpointPosition(float x_m,float y_m,float z_m,float yaw_rad = 0.0f);
+  void publishTrajectorySetpointVelocity(float vx_mps,float vy_mps,float vz_mps,float yaw_rad = 0.0f);
+  void publishAttitudeSetpoint(float qw,float qx,float qy,float qz,float thrust_z);
+  void publishRatesSetpoint(float roll_rate,float pitch_rate,float yaw_rate,float thrust_body_z);
 
 private:
   uint64_t timestamp_us() const;
@@ -135,6 +103,9 @@ private:
   bool has_command_ack_ = false;
   bool has_estimator_flags_ = false;
   bool has_wind_ = false;
+
+
+  //rclcpp::Subscription<cuas_msgs::msg::TargetTrack>::SharedPtr target_track_sub_;
 
   rclcpp::Subscription<px4_msgs::msg::VehicleOdometry>::SharedPtr odometry_sub_;
   rclcpp::Subscription<px4_msgs::msg::VehicleStatus>::SharedPtr status_sub_;
