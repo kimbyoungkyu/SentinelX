@@ -29,37 +29,23 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
-# CUASInterceptorCommandListener
-# add_executable(CUASInterceptorCommandListener src/CUASInterceptorCommandListener.cpp)
-# ament_target_dependencies(CUASInterceptorCommandListener rclcpp px4_msgs cuas_msgs)
-# install(TARGETS CUASInterceptorCommandListener DESTINATION lib/${PROJECT_NAME})
 
-# CUASInterceptorReportPublisher
-# add_executable(CUASInterceptorReportPublisher src/CUASInterceptorReportPublisher.cpp)
-# ament_target_dependencies(CUASInterceptorReportPublisher rclcpp px4_msgs cuas_msgs)
-# install(TARGETS CUASInterceptorReportPublisher DESTINATION lib/${PROJECT_NAME})
+add_executable(launch_node src/launch_node.cpp src/px4_listener.cpp src/px4_controller.cpp)
+ament_target_dependencies(launch_node rclcpp px4_msgs cuas_msgs)
+target_link_libraries(launch_node "${cpp_typesupport_target}")
 
-add_executable(sentinelx_interceptor_node src/sentinelx_interceptor_node.cpp src/PX4Listener.cpp src/PX4Controller.cpp)
-ament_target_dependencies(sentinelx_interceptor_node rclcpp px4_msgs cuas_msgs)
-target_link_libraries(sentinelx_interceptor_node "${cpp_typesupport_target}")
+add_executable(c2_guidance_node src/c2_guidance_node.cpp src/px4_listener.cpp src/px4_controller.cpp)
+ament_target_dependencies(c2_guidance_node px4_msgs rclcpp)
+target_link_libraries(c2_guidance_node "${cpp_typesupport_target}")
 
-add_executable(sentinelx_px4_control_node src/sentinelx_px4_control_node.cpp src/PX4Listener.cpp  src/PX4Controller.cpp)
-ament_target_dependencies(sentinelx_px4_control_node rclcpp px4_msgs px4_msgs)
-target_link_libraries(sentinelx_px4_control_node "${cpp_typesupport_target}")
-
-add_executable(sentinelx_c2_guidance_node src/sentinelx_c2_guidance_node.cpp src/PX4Listener.cpp src/PX4Controller.cpp)
-ament_target_dependencies(sentinelx_c2_guidance_node px4_msgs rclcpp)
-target_link_libraries(sentinelx_c2_guidance_node "${cpp_typesupport_target}")
-
-add_executable(sentinelx_seeker_guidance_node src/sentinelx_seeker_guidance_node.cpp src/PX4Listener.cpp src/PX4Controller.cpp)
-ament_target_dependencies(sentinelx_seeker_guidance_node rclcpp px4_msgs sensor_msgs)
-target_link_libraries(sentinelx_seeker_guidance_node "${cpp_typesupport_target}")
+add_executable(terminal_guidance_node src/terminal_guidance_node.cpp src/px4_listener.cpp src/px4_controller.cpp)
+ament_target_dependencies(terminal_guidance_node rclcpp px4_msgs sensor_msgs)
+target_link_libraries(terminal_guidance_node "${cpp_typesupport_target}")
 
 install(TARGETS
-  sentinelx_interceptor_node
-  sentinelx_px4_control_node
-  sentinelx_c2_guidance_node
-  sentinelx_seeker_guidance_node
+  launch_node
+  c2_guidance_node
+  terminal_guidance_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

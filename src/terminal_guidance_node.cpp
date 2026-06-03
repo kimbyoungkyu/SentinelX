@@ -1,10 +1,9 @@
-#include "sentinelx_seeker_guidance_node.hpp"
-
+#include "terminal_guidance_node.hpp"
 #include <chrono>
 
 using namespace std::chrono_literals;
 
-SentinelXSeekerNode::SentinelXSeekerNode():PX4Listener("sentinelx_seeker_guidance_node"),  
+TerminalGuidanceNode::TerminalGuidanceNode():PX4Listener("terminal_guidance_node"),  
   interceptor_id_(declare_parameter<std::string>("interceptor_id", "INT001")),
   target_id_(declare_parameter<std::string>("target_id", "")),
   simulate_detection_(declare_parameter<bool>("simulate_detection", false)),
@@ -15,7 +14,7 @@ SentinelXSeekerNode::SentinelXSeekerNode():PX4Listener("sentinelx_seeker_guidanc
   // 1. Phase Subscriber
   phase_sub_ = create_subscription<sentinelx::msg::InterceptorPhase>(
     "/sentinelx/interceptor/phase", 10,
-    std::bind(&SentinelXSeekerNode::on_phase, this, std::placeholders::_1));
+    std::bind(&TerminalGuidanceNode::on_phase, this, std::placeholders::_1));
 
 
   std::string topic_name = "/INT" + interceptor_id_ + "/camera/image_raw";
@@ -23,7 +22,7 @@ SentinelXSeekerNode::SentinelXSeekerNode():PX4Listener("sentinelx_seeker_guidanc
   image_sub_ = this->create_subscription<sensor_msgs::msg::Image>(  // :: 로 수정
     topic_name,                  // _ 추가
     qos_profile,
-    std::bind(&SentinelXSeekerNode::image_callback, this, std::placeholders::_1));    
+    std::bind(&TerminalGuidanceNode::image_callback, this, std::placeholders::_1));    
 
 
   // 3. Publishers
@@ -33,10 +32,10 @@ SentinelXSeekerNode::SentinelXSeekerNode():PX4Listener("sentinelx_seeker_guidanc
 
   // 4. Timer (chrono_literals 네임스페이스 활성화 상태 기준, 안 된다면 std::chrono::milliseconds(100) 사용)
   using namespace std::chrono_literals; 
-  timer_ = create_wall_timer(100ms, std::bind(&SentinelXSeekerNode::publish_seeker, this));
+  timer_ = create_wall_timer(100ms, std::bind(&TerminalGuidanceNode::publish_seeker, this));
   RCLCPP_INFO(get_logger(), "SentinelX Seeker guidance node started");
 }
-void SentinelXSeekerNode::on_phase(const sentinelx::msg::InterceptorPhase::SharedPtr msg)
+void TerminalGuidanceNode::on_phase(const sentinelx::msg::InterceptorPhase::SharedPtr msg)
 {
   current_phase_ = msg->phase;
   if (!msg->target_id.empty()) {
@@ -44,7 +43,7 @@ void SentinelXSeekerNode::on_phase(const sentinelx::msg::InterceptorPhase::Share
   }
 }
 
-void SentinelXSeekerNode::onPX4Updated(){
+void TerminalGuidanceNode::onPX4Updated(){
     if (px4_ready()) {
       RCLCPP_INFO(this->get_logger(), "Seeker Node received PX4 update");
     }
@@ -64,7 +63,7 @@ void SentinelXSeekerNode::onPX4Updated(){
     RCLCPP_INFO(this->get_logger(), "has_battery");
 }
     */
-void SentinelXSeekerNode::image_callback(const sensor_msgs::msg::Image::ConstSharedPtr msg) const
+void TerminalGuidanceNode::image_callback(const sensor_msgs::msg::Image::ConstSharedPtr msg) const
 {
     // 이미지 메타데이터 출력 예시
     RCLCPP_INFO(this->get_logger(), 
@@ -79,7 +78,7 @@ void SentinelXSeekerNode::image_callback(const sensor_msgs::msg::Image::ConstSha
     // RCLCPP_INFO(this->get_logger(), "Image Data Size: %zu bytes", msg->data.size());
 }
 
-void SentinelXSeekerNode::publish_seeker()
+void TerminalGuidanceNode::publish_seeker()
 {
   ++frame_id_;
 
@@ -122,7 +121,7 @@ void SentinelXSeekerNode::publish_seeker()
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<SentinelXSeekerNode>());
+  rclcpp::spin(std::make_shared<TerminalGuidanceNode>());
   rclcpp::shutdown();
   return 0;
 }

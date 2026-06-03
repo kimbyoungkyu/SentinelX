@@ -7,12 +7,12 @@
 #include "sentinelx/msg/seeker_track.hpp"
 #include "sentinelx/msg/interceptor_phase.hpp"
 #include "sentinelx/msg/interceptor_health.hpp"
-#include "PX4Listener.hpp"
+#include "px4_listener.hpp"
 
-class SentinelXC2GuidanceNode : public PX4Listener
+class C2GuidanceNode : public PX4Listener
 {
 public:
-  SentinelXC2GuidanceNode();
+  C2GuidanceNode();
 
 private:
   void on_phase(const sentinelx::msg::InterceptorPhase::SharedPtr msg);

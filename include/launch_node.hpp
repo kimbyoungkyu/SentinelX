@@ -19,7 +19,7 @@
 #include "sentinelx/msg/seeker_track.hpp"
 #include "sentinelx/msg/interceptor_phase.hpp"
 #include "sentinelx/msg/internal_target_estimate.hpp"
-#include "PX4Listener.hpp"
+#include "px4_listener.hpp"
 
 enum class Phase : uint8_t
 {
@@ -37,10 +37,10 @@ enum class Phase : uint8_t
   Fault = 11
 };
 
-class SentinelXInterceptorNode : public PX4Listener
+class LaunchNode : public PX4Listener
 {
 public:
-  SentinelXInterceptorNode();
+  LaunchNode();
 
 private:
   void on_px4_state(const sentinelx::msg::PX4VehicleState::SharedPtr msg);

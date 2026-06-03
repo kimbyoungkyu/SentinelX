@@ -26,31 +26,23 @@ def generate_launch_description():
         
         Node(
             package="sentinelx",
-            executable="sentinelx_interceptor_node",
-            name="sentinelx_interceptor_node",
+            executable="launch_node",
+            name="launch_node",
             output="screen",
             parameters=[{"interceptor_id": interceptor_id, "mavlink_sys_id": 1}]
         ),
         
         Node(
             package="sentinelx",
-            executable="sentinelx_px4_control_node",
-            name="sentinelx_px4_control_node",
-            output="screen",
-            parameters=[{"interceptor_id": interceptor_id, "dry_run": True}]
-        ),
-        
-        Node(
-            package="sentinelx",
-            executable="sentinelx_c2_guidance_node",
-            name="sentinelx_c2_guidance_node",
+            executable="c2_guidance_node",
+            name="c2_guidance_node",
             output="screen",
             parameters=[{"interceptor_id": interceptor_id, "simulate_detection": False, "simulate_lock": False}],
         ),
         Node(
             package="sentinelx",
-            executable="sentinelx_seeker_guidance_node",
-            name="sentinelx_seeker_guidance_node",
+            executable="terminal_guidance_node",
+            name="terminal_guidance_node",
             output="screen",
             parameters=[{"interceptor_id": interceptor_id, "simulate_detection": False, "simulate_lock": False}],
         )

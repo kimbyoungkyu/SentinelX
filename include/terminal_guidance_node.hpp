@@ -7,22 +7,17 @@
 #include "sentinelx/msg/seeker_track.hpp"
 #include "sentinelx/msg/interceptor_phase.hpp"
 #include "sentinelx/msg/interceptor_health.hpp"
-#include "PX4Listener.hpp"
+#include "px4_listener.hpp"
 
-class SentinelXSeekerNode : public PX4Listener
+class TerminalGuidanceNode : public PX4Listener
 {
 public:
-  SentinelXSeekerNode();
+  TerminalGuidanceNode();
 
 private:
-
-
-  void image_callback(const sensor_msgs::msg::Image::ConstSharedPtr msg) const;
-
-
   virtual void onPX4Updated() override;
 
-
+  void image_callback(const sensor_msgs::msg::Image::ConstSharedPtr msg) const;
   void on_phase(const sentinelx::msg::InterceptorPhase::SharedPtr msg);
   void publish_seeker();
 
@@ -32,7 +27,6 @@ private:
   bool simulate_lock_;
   uint32_t frame_id_;
   uint8_t current_phase_;
-
   rclcpp::Subscription<sentinelx::msg::InterceptorPhase>::SharedPtr phase_sub_;
   rclcpp::Publisher<sentinelx::msg::SeekerStatus>::SharedPtr status_pub_;
   rclcpp::Publisher<sentinelx::msg::SeekerTrack>::SharedPtr track_pub_;

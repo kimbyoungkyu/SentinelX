@@ -5,13 +5,13 @@
 3. 인터셉터 상태 관리: C2 명령과 시커 정보를 바탕으로 인터셉터의 현재 상태(예: Idle, MissionLoaded, InertialMidcourse, SeekerSearch, TerminalHoming 등)를 관리하고, 이를 C2에 발행하여 미션 진행 상황을 통보합니다.
 4. 타겟 추정치 생성: 시커 트랙과 C2로부터의 타            
 */
-#include "sentinelx_c2_guidance_node.hpp"
+#include "c2_guidance_node.hpp"
 
 #include <chrono>
 
 using namespace std::chrono_literals;
 
-SentinelXC2GuidanceNode::SentinelXC2GuidanceNode():PX4Listener("sentinelx_c2_guidance_node"),
+C2GuidanceNode::C2GuidanceNode():PX4Listener("sentinelx_c2_guidance_node"),
   interceptor_id_(declare_parameter<std::string>("interceptor_id", "SX-INT-001")),
   target_id_(declare_parameter<std::string>("target_id", "")),
   simulate_detection_(declare_parameter<bool>("simulate_detection", false)),
@@ -21,16 +21,16 @@ SentinelXC2GuidanceNode::SentinelXC2GuidanceNode():PX4Listener("sentinelx_c2_gui
 {
   phase_sub_ = create_subscription<sentinelx::msg::InterceptorPhase>(
     "/sentinelx/interceptor/phase", 10,
-    std::bind(&SentinelXC2GuidanceNode::on_phase, this, std::placeholders::_1));
+    std::bind(&C2GuidanceNode::on_phase, this, std::placeholders::_1));
 
   status_pub_ = create_publisher<sentinelx::msg::SeekerStatus>("/sentinelx/seeker/status", 10);
   track_pub_ = create_publisher<sentinelx::msg::SeekerTrack>("/sentinelx/seeker/track", 10);
   health_pub_ = create_publisher<sentinelx::msg::InterceptorHealth>("/sentinelx/health", 10);
-  timer_ = create_wall_timer(100ms, std::bind(&SentinelXC2GuidanceNode::publish_seeker, this));
+  timer_ = create_wall_timer(100ms, std::bind(&C2GuidanceNode::publish_seeker, this));
   RCLCPP_INFO(get_logger(), "SentinelX C2 guidance node started");
 }
 
-void SentinelXC2GuidanceNode::on_phase(const sentinelx::msg::InterceptorPhase::SharedPtr msg)
+void C2GuidanceNode::on_phase(const sentinelx::msg::InterceptorPhase::SharedPtr msg)
 {
   current_phase_ = msg->phase;
   if (!msg->target_id.empty()) {
@@ -38,14 +38,14 @@ void SentinelXC2GuidanceNode::on_phase(const sentinelx::msg::InterceptorPhase::S
   }
 }
 
-void SentinelXC2GuidanceNode::onPX4Updated(){
+void C2GuidanceNode::onPX4Updated(){
       if (px4_ready()) {
       RCLCPP_INFO(this->get_logger(), "C2 Node received PX4 update");
     }
 
 }
 
-void SentinelXC2GuidanceNode::publish_seeker()
+void C2GuidanceNode::publish_seeker()
 {
   ++frame_id_;
 
@@ -88,7 +88,7 @@ void SentinelXC2GuidanceNode::publish_seeker()
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<SentinelXC2GuidanceNode>());
+  rclcpp::spin(std::make_shared<C2GuidanceNode>());
   rclcpp::shutdown();
   return 0;
 }
