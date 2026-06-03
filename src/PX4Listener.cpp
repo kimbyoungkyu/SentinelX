@@ -30,7 +30,7 @@ PX4Listener::PX4Listener(
     std::bind(&PX4Listener::onFailsafeFlags, this, _1));
 
   battery_sub_ = create_subscription<px4_msgs::msg::BatteryStatus>(
-    "/fmu/out/battery_status",
+    "/fmu/out/battery_status_v1",
     qos,
     std::bind(&PX4Listener::onBatteryStatus, this, _1));
 
@@ -41,6 +41,7 @@ PX4Listener::PX4Listener(
 
   land_detected_sub_ = create_subscription<px4_msgs::msg::VehicleLandDetected>(
     "/fmu/out/vehicle_land_detected",
+    
     qos,
     std::bind(&PX4Listener::onVehicleLandDetected, this, _1));
 
