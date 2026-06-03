@@ -11,7 +11,7 @@
 
 using namespace std::chrono_literals;
 
-C2GuidanceNode::C2GuidanceNode():PX4Listener("sentinelx_c2_guidance_node"),
+C2GuidanceNode::C2GuidanceNode():PX4Proxy("sentinelx_c2_guidance_node"),
   interceptor_id_(declare_parameter<std::string>("interceptor_id", "SX-INT-001")),
   target_id_(declare_parameter<std::string>("target_id", "")),
   simulate_detection_(declare_parameter<bool>("simulate_detection", false)),

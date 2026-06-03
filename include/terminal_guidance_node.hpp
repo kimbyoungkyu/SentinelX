@@ -7,9 +7,9 @@
 #include "sentinelx/msg/seeker_track.hpp"
 #include "sentinelx/msg/interceptor_phase.hpp"
 #include "sentinelx/msg/interceptor_health.hpp"
-#include "px4_listener.hpp"
+#include "px4_proxy.hpp"
 
-class TerminalGuidanceNode : public PX4Listener
+class TerminalGuidanceNode : public PX4Proxy
 {
 public:
   TerminalGuidanceNode();

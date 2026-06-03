@@ -3,7 +3,7 @@
 
 using namespace std::chrono_literals;
 
-TerminalGuidanceNode::TerminalGuidanceNode():PX4Listener("terminal_guidance_node"),  
+TerminalGuidanceNode::TerminalGuidanceNode():PX4Proxy("terminal_guidance_node"),  
   interceptor_id_(declare_parameter<std::string>("interceptor_id", "INT001")),
   target_id_(declare_parameter<std::string>("target_id", "")),
   simulate_detection_(declare_parameter<bool>("simulate_detection", false)),

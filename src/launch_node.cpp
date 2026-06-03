@@ -13,7 +13,7 @@ inline rclcpp::QoS BestEffortTelemetryQoS()
   return rclcpp::QoS(rclcpp::KeepLast(100)).best_effort().durability_volatile();
 }
 
-LaunchNode::LaunchNode():PX4Listener("launch_node"),  
+LaunchNode::LaunchNode():PX4Proxy("launch_node"),  
     interceptor_id_(declare_parameter<std::string>("interceptor_id", "SX-INT-001")),
     mission_id_(""),
     target_id_(""),

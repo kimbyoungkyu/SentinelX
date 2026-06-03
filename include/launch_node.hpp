@@ -20,7 +20,7 @@
 #include "sentinelx/msg/interceptor_phase.hpp"
 #include "sentinelx/msg/internal_target_estimate.hpp"
 #include "px4_listener.hpp"
-#include "px4_controller.hpp"
+#include "px4_proxy.hpp"
 
 enum class Phase : uint8_t
 {
@@ -38,7 +38,7 @@ enum class Phase : uint8_t
   Fault = 11
 };
 
-class LaunchNode : public PX4Listener
+class LaunchNode : public PX4Proxy
 {
 public:
   LaunchNode();
