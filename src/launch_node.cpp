@@ -63,6 +63,7 @@ LaunchNode::LaunchNode():PX4Proxy("launch_node"),
 
 void LaunchNode::onC2Command(const cuas_msgs::msg::C2Command::SharedPtr msg)
 {
+  return;
   if (launched_ && !c2_command_allowed_after_launch(msg->command_type)) {
     sendAck(*msg,false,cuas_msgs::msg::MissionAck::REJECTED,"C2 command ignored after launch; only ABORT is accepted");
     return;
@@ -161,6 +162,7 @@ void LaunchNode::onC2Command(const cuas_msgs::msg::C2Command::SharedPtr msg)
 
 void LaunchNode::onC2TargetTrack(const cuas_msgs::msg::TargetTrack::SharedPtr msg)
 {
+  return;
   if (!target_id_.empty() && msg->target_id != target_id_) {
     return;
   }
@@ -215,7 +217,7 @@ void LaunchNode::onPX4Updated()
 {
   if (px4_ready()) {
     healthy_ = true;
-    RCLCPP_INFO(this->get_logger(), "Launch Node Ready!!!!");
+    //RCLCPP_INFO(this->get_logger(), "Launch Node Ready!!!!");
   } else {
     healthy_ = false;
   }
@@ -256,6 +258,8 @@ void LaunchNode::publish_guidance()
 void LaunchNode::publishSnapshot()
 {
   //px4가 준비된 상태가 아니면 보내지 않는다.
+  return;
+
   if (!px4_ready()) return;
 
   cuas_msgs::msg::InterceptorSnapshot msg;
@@ -332,6 +336,7 @@ void LaunchNode::publish_target_estimate()
 
 void LaunchNode::sendAck(const cuas_msgs::msg::C2Command & cmd,bool accepted,uint8_t code,const std::string & message)
 {
+  return;
   cuas_msgs::msg::MissionAck ack;
   ack.stamp = now();
   ack.command_id = cmd.command_id;

@@ -30,22 +30,29 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 
-add_executable(launch_node src/launch_node.cpp src/px4_proxy.cpp)
+add_executable(launch_node src/base_node.cpp src/launch_node.cpp src/px4_proxy.cpp)
 ament_target_dependencies(launch_node rclcpp px4_msgs cuas_msgs)
 target_link_libraries(launch_node "${cpp_typesupport_target}")
 
-add_executable(c2_guidance_node src/c2_guidance_node.cpp src/px4_proxy.cpp)
+add_executable(c2_guidance_node src/base_node.cpp src/c2_guidance_node.cpp src/px4_proxy.cpp)
 ament_target_dependencies(c2_guidance_node px4_msgs rclcpp cuas_msgs)
 target_link_libraries(c2_guidance_node "${cpp_typesupport_target}")
 
-add_executable(terminal_guidance_node src/terminal_guidance_node.cpp src/px4_proxy.cpp)
+add_executable(terminal_guidance_node src/base_node.cpp src/terminal_guidance_node.cpp src/px4_proxy.cpp)
 ament_target_dependencies(terminal_guidance_node rclcpp px4_msgs sensor_msgs cuas_msgs)
 target_link_libraries(terminal_guidance_node "${cpp_typesupport_target}")
+
+
+add_executable(sentinelX_node src/base_node.cpp src/px4_proxy.cpp src/sentinelX_node.cpp )
+ament_target_dependencies(sentinelX_node rclcpp px4_msgs sensor_msgs cuas_msgs)
+target_link_libraries(sentinelX_node "${cpp_typesupport_target}")
+
 
 install(TARGETS
   launch_node
   c2_guidance_node
   terminal_guidance_node
+  sentinelX_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

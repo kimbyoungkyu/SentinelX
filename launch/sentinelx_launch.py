@@ -18,7 +18,8 @@ def generate_launch_description():
                 "PX4_HOME_ALT": "0.0",
              #   "PX4_SYS_AUTOSTART": "4001",
             }
-        ),        
+        ),
+        
         Node(
             package="sentinelx",
             executable="launch_node",
@@ -27,18 +28,25 @@ def generate_launch_description():
             parameters=[{"interceptor_id": interceptor_id, "mavlink_sys_id": 1}]
         ),
         
+#        Node(
+#            package="sentinelx",
+#            executable="c2_guidance_node",
+#            name="c2_guidance_node",
+#            output="screen",
+#            parameters=[{"interceptor_id": interceptor_id, "simulate_detection": False, "simulate_lock": False}],
+#        ),
+#        Node(
+#            package="sentinelx",
+#            executable="terminal_guidance_node",
+#            name="terminal_guidance_node",
+#            output="screen",
+#            parameters=[{"interceptor_id": interceptor_id}],
+#        ),
         Node(
             package="sentinelx",
-            executable="c2_guidance_node",
-            name="c2_guidance_node",
+            executable="sentinelX_node",
+            name="sentinelX_node",
             output="screen",
-            parameters=[{"interceptor_id": interceptor_id, "simulate_detection": False, "simulate_lock": False}],
-        ),
-        Node(
-            package="sentinelx",
-            executable="terminal_guidance_node",
-            name="terminal_guidance_node",
-            output="screen",
-            parameters=[{"interceptor_id": interceptor_id, "simulate_detection": False, "simulate_lock": False}],
+            parameters=[{"interceptor_id": interceptor_id}],
         )
     ])

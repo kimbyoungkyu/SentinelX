@@ -6,7 +6,6 @@
 4. 타겟 추정치 생성: 시커 트랙과 C2로부터의 타            
 */
 #include "c2_guidance_node.hpp"
-
 #include <chrono>
 
 using namespace std::chrono_literals;

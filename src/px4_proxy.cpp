@@ -3,10 +3,7 @@
 
 using std::placeholders::_1;
 
-PX4Proxy::PX4Proxy(
-  const std::string & node_name,
-  const rclcpp::NodeOptions & options)
-: rclcpp::Node(node_name, options)
+PX4Proxy::PX4Proxy(const std::string & node_name,const rclcpp::NodeOptions & options): rclcpp::Node(node_name, options)
 {
   auto telemetry_qos = px4TelemetryQoS();
   auto command_qos = px4CommandQoS();
@@ -121,7 +118,7 @@ void PX4Proxy::onVehicleStatus(const px4_msgs::msg::VehicleStatus::SharedPtr msg
     latest_status_ = *msg;
     has_status_ = true;
   }
-
+  //RCLCPP_INFO(get_logger(), "onVehicleStatus");
   onPX4Updated();
 }
 
@@ -288,8 +285,7 @@ void PX4Proxy::land()
 
 void PX4Proxy::returnToLaunch()
 {
-  publishVehicleCommand(
-    px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_RETURN_TO_LAUNCH);
+  publishVehicleCommand(px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_RETURN_TO_LAUNCH);
 
   RCLCPP_INFO(get_logger(), "PX4 RTL command published");
 }
